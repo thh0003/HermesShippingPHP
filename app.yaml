@@ -11,13 +11,26 @@ runtime_config:
 
 #[START gae_flex_mysql_env]
 env_variables:
-  MYSQL_USER: "hsAdmin"
-  MYSQL_PASSWORD: "skfjlkdWEicOI2009$$dsaklsi"
-  MYSQL_DSN: "mysql:dbname=Hermes_Shipping_DB;unix_socket=/cloudsql/hermes-shipping:us-central1:hermes-shipping-db"
-  MYSQL_SSL_KEY: "inc/db-client-key.pem"
-  MYSQL_SSL_CA: "inc/db-server-ca.pem"
-  MYSQL_SSL_CERT: "inc/db-client-cert.pem"
+  MYSQL_USER: hsAdmin
+  MYSQL_PASSWORD: skfjlkdWEicOI2009$$dsaklsi
+  MYSQL_DSN: mysql:dbname=Hermes_Shipping_DB;unix_socket=/cloudsql/hermes-shipping:us-central1:hermes-shipping-db
+  MYSQL_PORT: 3306
+  MYSQL_DATABASE: Hermes_Shipping_DB
+  MYSQL_SERVER: 130.211.118.121
+  MYSQL_CONNECTION_NAME: hermes-shipping:us-central1:hermes-shipping-db
+  MYSQL_SSL_KEY: inc/db-client-key.pem
+  MYSQL_SSL_CA: inc/db-server-ca.pem
+  MYSQL_SSL_CERT: inc/db-client-cert.pem
+
+# options are "mysql", "postgres", "mongodb", or "datastore"
+  HERMES_BACKEND: mysql
 #[END gae_flex_mysql_env]
+
+
+# Google credentials and configuration
+#google_client_id:      YOUR_CLIENT_ID
+#google_client_secret:  YOUR_CLIENT_SECRET
+#google_project_id:     YOUR_PROJECT_ID
 
 # Defaults to "serve index.php" and "serve public/index.php". Can be used to
 # serve a custom PHP front controller (e.g. "serve backend/index.php") or to
