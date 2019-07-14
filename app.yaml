@@ -3,8 +3,8 @@ runtime: php
 
 env: flex
 
-skip_files:
-- ^(.*/)?\.pem$
+#skip_files:
+#- ^(.*/)?\.pem$
 
 runtime_config:
   document_root: server
