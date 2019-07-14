@@ -9,6 +9,8 @@ if (!isset($HS_RETURN)) {
 }
     
 $HS_RETURN->DEBUG = $DEBUG;
+
 echo "hello world!";
 
+require('inc/dbclose.php');
 ?>

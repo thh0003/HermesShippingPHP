@@ -1,9 +1,24 @@
 # Use the PHP 7.3 runtime (BETA) by replacing "php72" below with "php73"
-runtime: php72
+runtime: php
+env: flex
+
+runtime_config:
+  document_root: ./server/
+
+#[START gae_flex_mysql_env]
+env_variables:
+  MYSQL_USER: "hsAdmin"
+  MYSQL_PASSWORD: "skfjlkdWEicOI2009$$dsaklsi"
+  MYSQL_DSN: "mysql:dbname=Hermes_Shipping_DB;unix_socket=/cloudsql/hermes-shipping:us-central1:hermes-shipping-db"
+  MYSQL_SSL_KEY: "inc/db-client-key.pem"
+  MYSQL_SSL_CA: "inc/db-server-ca.pem"
+  MYSQL_SSL_CERT: "inc/db-client-cert.pem"
+#[END gae_flex_mysql_env]
 
 # Defaults to "serve index.php" and "serve public/index.php". Can be used to
 # serve a custom PHP front controller (e.g. "serve backend/index.php") or to
 # run a long-running PHP script as a worker process (e.g. "php worker.php").
 #
 # entrypoint: serve index.php
-entrypoint: serve server/hs_server.php
+entrypoint: serve server/index.php
+
