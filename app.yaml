@@ -1,9 +1,13 @@
 # Use the PHP 7.3 runtime (BETA) by replacing "php72" below with "php73"
 runtime: php
+
 env: flex
 
+skip_files:
+- ^(.*/)?\.pem$
+
 runtime_config:
-  document_root: ./server
+  document_root: server
 
 #[START gae_flex_mysql_env]
 env_variables:
