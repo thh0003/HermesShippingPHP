@@ -10,18 +10,25 @@ $db_response = "";
 
 use mysqli;
 
-$dbconn=mysqli_init();
+$dbconn = mysqli_init();
 if (!$dbconn)
   {
     $logger->error('SQL INIT ERROR: '. $dbconn->connect_error);
   }
 
-$dbconn->ssl_set($clientkey, $clientcert, $serverca,NULL,NULL);
-$dbconn->real_connect($servername,$username,$password,$dbName);
-$dbconn->autocommit(false);
+if (!$mysqli->options(MYSQLI_INIT_COMMAND, 'SET AUTOCOMMIT = 0')) 
+    {
+        $logger->error('Setting MYSQLI_INIT_COMMAND failed');
+    }
 
-if ($dbconn->connect_error){
-    $logger->error('SQL CONNECTION ERROR: '. $dbconn->connect_error);
-}
+//$dbconn->autocommit(false);
+
+$dbconn->ssl_set($clientkey, $clientcert, $serverca,NULL,NULL);
+if (!$dbconn->real_connect($servername,$username,$password,$dbName))
+    {
+        $logger->error('Connect Error (' . mysqli_connect_errno() . ') '. mysqli_connect_error());
+    }
+
+$logger->info('Success... ' . $dbconn->host_info );
 
 ?>
