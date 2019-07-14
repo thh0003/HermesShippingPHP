@@ -15,7 +15,9 @@
  * limitations under the License.
  */
 // Ensure the required environment variables are set to run the application
+
 if (!getenv('MYSQL_DSN') || !getenv('MYSQL_USER') || false === getenv('MYSQL_PASSWORD')) {
     die('Set MYSQL_DSN, MYSQL_USER, and MYSQL_PASSWORD environment variables');
 }
+require('hs_logger.php');
 require('hs_server.php');
