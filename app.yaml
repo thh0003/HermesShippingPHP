@@ -21,6 +21,7 @@ env_variables:
   MYSQL_SSL_KEY: inc/db-client-key.pem
   MYSQL_SSL_CA: inc/db-server-ca.pem
   MYSQL_SSL_CERT: inc/db-client-cert.pem
+  cloud_sql_instances: "hermes-shipping:us-central1:hermes-shipping-db"
 
 # options are "mysql", "postgres", "mongodb", or "datastore"
   HERMES_BACKEND: mysql

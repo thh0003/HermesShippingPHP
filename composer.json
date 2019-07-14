@@ -1,5 +1,14 @@
 {
-    "require": {
- 
-    }
+    "autoload": {
+        "psr-4": {
+            "Server\\" : "server"
+        }
+     },
+      "require": {
+        "php": "7.2.*",
+        "google/cloud": ">=0.21"
+      },
+      "require-dev": {
+        "google/cloud-tools": ">=0.6"
+      }
 }
