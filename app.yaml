@@ -3,7 +3,7 @@ runtime: php
 env: flex
 
 runtime_config:
-  document_root: "server"
+  document_root: ./server
 
 #[START gae_flex_mysql_env]
 env_variables:
