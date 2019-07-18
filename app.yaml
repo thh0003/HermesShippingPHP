@@ -8,6 +8,7 @@ env: flex
 
 runtime_config:
   document_root: server
+  enable_stackdriver_integration: true
 
 #[START gae_flex_mysql_env]
 env_variables:
@@ -29,9 +30,9 @@ env_variables:
 
 
 # Google credentials and configuration
-#google_client_id:      YOUR_CLIENT_ID
-#google_client_secret:  YOUR_CLIENT_SECRET
-#google_project_id:     YOUR_PROJECT_ID
+google_client_id:      YOUR_CLIENT_ID
+google_client_secret:  YOUR_CLIENT_SECRET
+google_project_id:     hermes-shipping
 
 # Defaults to "serve index.php" and "serve public/index.php". Can be used to
 # serve a custom PHP front controller (e.g. "serve backend/index.php") or to

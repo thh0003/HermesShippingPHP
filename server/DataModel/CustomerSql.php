@@ -14,72 +14,112 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-namespace server\DataModel;
-
-
+namespace Hermes\DataModel;
 
 /**
  * Class Sql implements the DataModelInterface with a mysql or postgres database.
  *
  */
-class Sql implements DataModelInterface
+class CustomerSql implements CustomerDataModelInterface
 {
-    private $dsn;
-    private $user;
+
+    private $servername;
+    private $username;
     private $password;
+    private $dbname;
+    private $clientkey;
+    private $clientcert;
+    private $serverca;
+    private $commit;
 
-    /**
+
+    /*
      * Creates the SQL books table if it doesn't already exist.
+     *         'Useridentifier' => 'string',
+        'Firebase ID' => 'string',
+        'First Name' => 'string',
+        'Middle Name' => 'string',
+        'Last Name' => 'string',
+        'Email' => 'string',
+        'Phone' => 'string',
+        'Active'=> 'bit',
      */
-    public function __construct($dsn, $user, $password)
+    public function __construct($server,$user,$pwd,$db,$key,$cert,$ca,$debug=false,$commit=false)
     {
-        $this->dsn = $dsn;
-        $this->user = $user;
-        $this->password = $password;
+        $this->servername = $server;
+        $this->username = $user;
+        $this->password = $pwd;
+        $this->dbname = $db;
+        $this->clientkey = $key;
+        $this->clientcert = $cert;
+        $this->serverca = $ca;
+        $this->DEBUG = $debug;
+        $this->bindlist = "ssssss";
+        $this->commit = $commit;
 
-        $columns = array(
-            'id serial PRIMARY KEY ',
-            'title VARCHAR(255)',
-            'author VARCHAR(255)',
-            'published_date VARCHAR(255)',
-            'image_url VARCHAR(255)',
-            'description VARCHAR(255)',
-            'created_by VARCHAR(255)',
-            'created_by_id VARCHAR(255)',
+        $this->columnNames = array(
+            'Useridentifier',
+            'Firebase ID',
+            'First Name',
+            'Middle Name',
+            'Last Name',
+            'Email',
+            'Phone',
+            'Active',
         );
 
-        $this->columnNames = array_map(function ($columnDefinition) {
-            return explode(' ', $columnDefinition)[0];
-        }, $columns);
-        $columnText = implode(', ', $columns);
-        $pdo = $this->newConnection();
-        $pdo->query("CREATE TABLE IF NOT EXISTS books ($columnText)");
+    }
+
+    public function setCommit($commit){
+        return $this->commit = $commit;
+    }
+
+    public function getCommit(){
+        return $this->commit;
     }
 
     /**
-     * Creates a new PDO instance and sets error mode to exception.
+     * Creates a new mySQLi instance and sets error mode to exception.
      *
-     * @return PDO
+     * @return mySQLi
      */
     private function newConnection()
     {
-        $pdo = new PDO($this->dsn, $this->user, $this->password);
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $dbconn = mysqli_init();
+        if (!$dbconn)
+            {
+                trigger_error('SQL INIT ERROR: '. $dbconn->connect_error);
+            }
 
-        return $pdo;
+        if (!$dbconn->options(MYSQLI_INIT_COMMAND, 'SET AUTOCOMMIT = 0')) 
+            {
+                trigger_error('Setting MYSQLI_INIT_COMMAND failed');
+            }
+        
+        $dbconn->ssl_set($this->clientkey, $this->clientcert, $this->serverca,NULL,NULL);
+        if (!$dbconn->real_connect($this->servername,$this->username,$this->password,$this->dbname,3306,NULL,MYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT)){
+            trigger_error('Connect Error (' . mysqli_connect_errno() . ') '. mysqli_connect_error());
+            die('Connect Error (' . mysqli_connect_errno() . ') '. mysqli_connect_error());
+        }
+
+        if($this->DEBUG){
+            trigger_error("mySQLI Status: ".$dbconn->server_info." Database: ".$dbconn->host_info);
+        }
+
+
+        return $dbconn;
     }
 
     /**
-     * Throws an exception if $book contains an invalid key.
+     * Throws an exception if $customer contains an invalid key.
      *
-     * @param $book array
+     * @param $customer array
      *
      * @throws \Exception
      */
-    private function verifyBook($book)
+    private function verifyCustomer($customer)
     {
-        if ($invalid = array_diff_key($book, array_flip($this->columnNames))) {
+        if ($invalid = array_diff_key($customer, array_flip($this->columnNames))) {
             throw new \Exception(sprintf(
                 'unsupported book properties: "%s"',
                 implode(', ', $invalid)
@@ -87,74 +127,178 @@ class Sql implements DataModelInterface
         }
     }
 
-    public function listBooks($limit = 10, $cursor = null)
+    /*
+        listCustomers = list customers to a limit.  Uses the CustomerHex view vs Customer Relation.  CustomerHex simply converts the 'Useridentifier' column to Hex format
+    */
+    public function listCustomers($limit = 10, $cursor = null, $page = null)
     {
-        $pdo = $this->newConnection();
-        if ($cursor) {
-            $query = 'SELECT * FROM books WHERE id > :cursor ORDER BY id' .
-                ' LIMIT :limit';
-            $statement = $pdo->prepare($query);
-            $statement->bindValue(':cursor', $cursor, PDO::PARAM_INT);
-        } else {
-            $query = 'SELECT * FROM books ORDER BY id LIMIT :limit';
-            $statement = $pdo->prepare($query);
+        $dbconn = $this->newConnection();
+        if($this->DEBUG){
+            trigger_error("mySQLI Status: ".$dbconn->server_info." Database: ".$dbconn->host_info." Limit, Cursor: ". $limit . $cursor);
         }
-        $statement->bindValue(':limit', $limit + 1, PDO::PARAM_INT);
+        if ($cursor) {
+            if ($page == '<'){
+                $query = 'SELECT * FROM CustomerHex WHERE Useridentifier '. $page .' ?';
+                if($statement = $dbconn->prepare($query)){
+                    /* bind parameters for markers */
+                    $statement->bind_param("i",$cursor);
+                }else{
+                    trigger_error("mySQLI Error: ".$dbconn->error." Error Number: ".$dbconn->errno);
+                    die("mySQLI Error: ".$dbconn->error." Error Number: ".$dbconn->errno);
+                }
+            }else{
+                $query = 'SELECT * FROM CustomerHex WHERE Useridentifier '. $page .' ?' . ' LIMIT ?';
+                if($statement = $dbconn->prepare($query)){
+                    /* bind parameters for markers */
+                    $limitT = $limit+1;
+                    $statement->bind_param("ii",$cursor,$limitT);
+                }else{
+                    trigger_error("mySQLI Error: ".$dbconn->error." Error Number: ".$dbconn->errno);
+                    die("mySQLI Error: ".$dbconn->error." Error Number: ".$dbconn->errno);
+                }
+            }
+
+            if($this->DEBUG){
+                trigger_error("Query: ".$query);
+            }
+
+
+        } else {
+            $query = 'SELECT * FROM CustomerHex ORDER BY Useridentifier LIMIT ?';
+            if($statement = $dbconn->prepare($query)){
+                $limitT = $limit+1;
+                $statement->bind_param("i",$limitT);
+            }else{
+                trigger_error("mySQLI Error: ".$dbconn->error." Error Number: ".$dbconn->errno);
+                die("mySQLI Error: ".$dbconn->error." Error Number: ".$dbconn->errno);
+            }
+        }
+
         $statement->execute();
         $rows = array();
+        $rowHeaders = array();
         $last_row = null;
-        $new_cursor = null;
-        while ($row = $statement->fetch(PDO::FETCH_ASSOC)) {
-            if (count($rows) == $limit) {
-                $new_cursor = $last_row['id'];
-                break;
-            }
-            array_push($rows, $row);
-            $last_row = $row;
+        $new_cursor = $cursor;
+
+        if($this->DEBUG){
+            trigger_error("mySQLI Status: ".$dbconn->server_info." Database: ".$dbconn->host_info." Limit, Cursor: ". $limit . $cursor);
         }
 
-        return array(
-            'books' => $rows,
+        //Get the Domains
+        $meta = $statement->result_metadata(); 
+        while ($rowHeader = $meta->fetch_field()) 
+        { 
+            array_push($rowHeaders, $rowHeader->name); 
+        } 
+
+        //Get the Tuples
+        $statement->execute();
+        $resultSet = $statement->get_result();
+        $rowStart = $resultSet->num_rows - $limit;
+        if ($page == "<"){
+            $resultSet->data_seek($rowStart);
+        }
+        $x = 0;
+        $row = $resultSet->fetch_array(MYSQLI_ASSOC);
+        while ($row && ($x <= $limit)) {
+            
+            if (count($rows) == $limit) {
+                $new_cursor = $last_row['Useridentifier'];
+            }else{
+                trigger_error("First Name: ".$row['First Name']);
+                $rows[]= $row;
+                $last_row = $row;
+                $new_cursor = $last_row['Useridentifier'];
+            }
+            $row = $resultSet->fetch_array(MYSQLI_ASSOC);
+            $x++;
+
+        }
+
+        $dbconn->close();
+
+        if($this->DEBUG){
+            trigger_error("Last Name: ". $rows[0]['Last Name']);
+        }
+
+        $retArray = array(
+            'customerColumns' => $rowHeaders,
+            'customers' => $rows,
             'cursor' => $new_cursor,
         );
+
+        return $retArray;
+
+
     }
 
-    public function create($book, $id = null)
+    public function create($customer, $id = null)
     {
-        $this->verifyBook($book);
+        $this->verifyCustomer($customer);
         if ($id) {
-            $book['id'] = $id;
+            $customer['Useridentifier'] = $id;
         }
-        $pdo = $this->newConnection();
-        $names = array_keys($book);
-        $placeHolders = array_map(function ($key) {
-            return ":$key";
+        $dbconn = $this->newConnection();
+        $names = array_keys($customer);
+        $placeHolders = array_map(function () {
+            return "?";
         }, $names);
         $sql = sprintf(
-            'INSERT INTO books (%s) VALUES (%s)',
-            implode(', ', $names),
+            'INSERT INTO Customer (`%s`) VALUES (%s)',
+            implode('`, `', $names),
             implode(', ', $placeHolders)
         );
-        $statement = $pdo->prepare($sql);
-        $statement->execute($book);
 
-        return $pdo->lastInsertId();
+        trigger_error("SQL: ". $sql);
+        if($statement = $dbconn->prepare($sql) ){
+                    //Firebase ID, First Name, Middle Name, Last Name, Email, Phone
+            if($statement->bind_param($this->bindlist, $customer['Firebase ID'],$customer['First Name'],$customer['Middle Name'], $customer['Last Name'], $customer['Email'], $customer['Phone'])){
+
+                if($statement->execute()){
+                    if($this->commit){
+                        if($dbconn->commit()){
+                            $insertID = $statement->insert_id;
+                        } else{
+                            $insertID = "ERROR: ".$dbconn->error;
+                            $dbconn->close();
+                            return $insertID;
+                        }
+                    }
+                } else{
+                    $insertID = "ERROR: ".$statement->error;
+                    $dbconn->close();
+                    return $insertID;                    
+                }
+            } else{
+                $insertID = "ERROR: ".$statement->error;
+                $dbconn->close();
+                return $insertID;
+            }
+        } else{
+            $insertID = "ERROR: ".$dbconn->error;
+            $dbconn->close();
+            return $insertID;
+        }
+        $dbconn->close();
+        return $insertID;
+
     }
 
     public function read($id)
     {
-        $pdo = $this->newConnection();
-        $statement = $pdo->prepare('SELECT * FROM books WHERE id = :id');
-        $statement->bindValue('id', $id, PDO::PARAM_INT);
+        $dbconn = $this->newConnection();
+        $statement = $dbconn->prepare('SELECT * FROM Customer WHERE Useridentifier = ?');
+        $statement->bind_param('s', $id);
         $statement->execute();
-
-        return $statement->fetch(PDO::FETCH_ASSOC);
+        $readCustomer = $statement->fetch();
+        $dbconn->close();
+        return $readCustomer;
     }
 
-    public function update($book)
+    public function update($customer)
     {
-        $this->verifyBook($book);
-        $pdo = $this->newConnection();
+        $this->verifyCustomer($customer);
+        $dbconn = $this->newConnection();
         $assignments = array_map(
             function ($column) {
                 return "$column=:$column";
@@ -162,20 +306,22 @@ class Sql implements DataModelInterface
             $this->columnNames
         );
         $assignmentString = implode(',', $assignments);
-        $sql = "UPDATE books SET $assignmentString WHERE id = :id";
-        $statement = $pdo->prepare($sql);
+        $sql = "UPDATE Customer SET $assignmentString WHERE Useridentifier = :id";
+        $statement = $dbconn->prepare($sql);
         $values = array_merge(
             array_fill_keys($this->columnNames, null),
-            $book
+            $customer
         );
-        return $statement->execute($values);
+        $result = $statement->execute($values);
+        $dbconn->close();
+        return $result;
     }
 
     public function delete($id)
     {
-        $pdo = $this->newConnection();
-        $statement = $pdo->prepare('DELETE FROM books WHERE id = :id');
-        $statement->bindValue('id', $id, PDO::PARAM_INT);
+        $dbconn = $this->newConnection();
+        $statement = $dbconn->prepare('DELETE FROM Customer WHERE Useridentifier = :id');
+        $statement->bind_param('s', $id);
         $statement->execute();
 
         return $statement->rowCount();

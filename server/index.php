@@ -1,4 +1,5 @@
 <?php
+header("Content-Type: application/json; charset=UTF-8");
 /**
  * Copyright 2016 Google Inc.
  *
@@ -15,11 +16,10 @@
  * limitations under the License.
  */
 // Ensure the required environment variables are set to run the application
-require('inc/hs_logger.php');
 
-if (!getenv('MYSQL_DSN') || !getenv('MYSQL_USER') || false === getenv('MYSQL_PASSWORD')) {
-    $logger->error('Set MYSQL_DSN, MYSQL_USER, and MYSQL_PASSWORD environment variables');
-//    die('Set MYSQL_DSN, MYSQL_USER, and MYSQL_PASSWORD environment variables');
-}
 
-require('inc/hs_server.php');
+require('inc/autoloader.php');
+
+require('inc/hsglobal.php');
+
+require('hs_server.php');

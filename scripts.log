@@ -1,0 +1,73 @@
+[14-Jul-2019 17:43:42 America/Los_Angeles] PHP Warning:  mysqli::real_connect(): (HY000/2003): Can't connect to MySQL server on '130.211.118.121' (4) in /hermes/server/inc/db.php on line 26
+[14-Jul-2019 17:43:42 America/Los_Angeles] PHP Notice:  Connect Error (2003) Can't connect to MySQL server on '130.211.118.121' (4) in /hermes/server/inc/db.php on line 28
+[14-Jul-2019 17:43:42 America/Los_Angeles] PHP Warning:  main(): Property access is not allowed yet in /hermes/server/inc/db.php on line 31
+[14-Jul-2019 17:43:42 America/Los_Angeles] PHP Notice:  Success...  in /hermes/server/inc/db.php on line 31
+[14-Jul-2019 17:43:42 America/Los_Angeles] PHP Fatal error:  Uncaught Error: Call to undefined function close() in /hermes/server/inc/dbclose.php:2
+Stack trace:
+#0 /hermes/server/hs_server.php(15): require()
+#1 /hermes/server/index.php(20): require('/hermes/server/...')
+#2 {main}
+  thrown in /hermes/server/inc/dbclose.php on line 2
+[14-Jul-2019 17:43:48 America/Los_Angeles] PHP Warning:  mysqli::real_connect(): (HY000/2003): Can't connect to MySQL server on '130.211.118.121' (4) in /hermes/server/inc/db.php on line 26
+[14-Jul-2019 17:43:48 America/Los_Angeles] PHP Notice:  Connect Error (2003) Can't connect to MySQL server on '130.211.118.121' (4) in /hermes/server/inc/db.php on line 28
+[14-Jul-2019 17:43:48 America/Los_Angeles] PHP Warning:  main(): Property access is not allowed yet in /hermes/server/inc/db.php on line 31
+[14-Jul-2019 17:43:48 America/Los_Angeles] PHP Notice:  Success...  in /hermes/server/inc/db.php on line 31
+[14-Jul-2019 17:43:48 America/Los_Angeles] PHP Fatal error:  Uncaught Error: Call to undefined function close() in /hermes/server/inc/dbclose.php:2
+Stack trace:
+#0 /hermes/server/hs_server.php(15): require()
+#1 /hermes/server/index.php(20): require('/hermes/server/...')
+#2 {main}
+  thrown in /hermes/server/inc/dbclose.php on line 2
+[14-Jul-2019 17:49:06 America/Los_Angeles] PHP Warning:  mysqli::real_connect(): (HY000/2003): Can't connect to MySQL server on '130.211.118.121' (4) in /hermes/server/inc/db.php on line 26
+[14-Jul-2019 17:49:06 America/Los_Angeles] PHP Notice:  Connect Error (2003) Can't connect to MySQL server on '130.211.118.121' (4) in /hermes/server/inc/db.php on line 28
+[14-Jul-2019 18:04:40 America/Los_Angeles] PHP Warning:  array_map(): Argument #2 should be an array in /hermes/server/inc/debug.php on line 22
+[14-Jul-2019 18:13:46 America/Los_Angeles] PHP Warning:  Invalid argument supplied for foreach() in /hermes/server/inc/debug.php on line 4
+[14-Jul-2019 18:18:56 America/Los_Angeles] PHP Warning:  Use of undefined constant REQUEST_URI - assumed 'REQUEST_URI' (this will throw an Error in a future version of PHP) in /hermes/server/inc/hsglobal.php on line 10
+[14-Jul-2019 18:18:56 America/Los_Angeles] PHP Warning:  Use of undefined constant REQUEST_URI - assumed 'REQUEST_URI' (this will throw an Error in a future version of PHP) in /hermes/server/inc/hsglobal.php on line 11
+[14-Jul-2019 18:18:56 America/Los_Angeles] PHP Warning:  Use of undefined constant REQUEST_URI - assumed 'REQUEST_URI' (this will throw an Error in a future version of PHP) in /hermes/server/inc/hsglobal.php on line 12
+[14-Jul-2019 18:21:03 America/Los_Angeles] PHP Warning:  Use of undefined constant REQUEST_URI - assumed 'REQUEST_URI' (this will throw an Error in a future version of PHP) in /hermes/server/inc/hsglobal.php on line 10
+[14-Jul-2019 18:21:03 America/Los_Angeles] PHP Warning:  Use of undefined constant REQUEST_URI - assumed 'REQUEST_URI' (this will throw an Error in a future version of PHP) in /hermes/server/inc/hsglobal.php on line 11
+[14-Jul-2019 18:21:03 America/Los_Angeles] PHP Warning:  Use of undefined constant REQUEST_URI - assumed 'REQUEST_URI' (this will throw an Error in a future version of PHP) in /hermes/server/inc/hsglobal.php on line 12
+[14-Jul-2019 18:21:30 America/Los_Angeles] PHP Warning:  mysqli::real_connect(): (HY000/2003): Can't connect to MySQL server on '130.211.118.121' (4) in /hermes/server/inc/db.php on line 26
+[14-Jul-2019 18:21:30 America/Los_Angeles] PHP Notice:  Connect Error (2003) Can't connect to MySQL server on '130.211.118.121' (4) in /hermes/server/inc/db.php on line 28
+[14-Jul-2019 18:28:37 America/Los_Angeles] PHP Warning:  Use of undefined constant REQUEST_URI - assumed 'REQUEST_URI' (this will throw an Error in a future version of PHP) in /hermes/server/inc/hsglobal.php on line 10
+[14-Jul-2019 18:28:37 America/Los_Angeles] PHP Warning:  Use of undefined constant REQUEST_URI - assumed 'REQUEST_URI' (this will throw an Error in a future version of PHP) in /hermes/server/inc/hsglobal.php on line 11
+[14-Jul-2019 18:28:37 America/Los_Angeles] PHP Warning:  Use of undefined constant REQUEST_URI - assumed 'REQUEST_URI' (this will throw an Error in a future version of PHP) in /hermes/server/inc/hsglobal.php on line 12
+[14-Jul-2019 18:29:00 America/Los_Angeles] PHP Warning:  mysqli::real_connect(): (HY000/2003): Can't connect to MySQL server on '130.211.118.121' (4) in /hermes/server/inc/db.php on line 26
+[14-Jul-2019 18:29:00 America/Los_Angeles] PHP Notice:  Connect Error (2003) Can't connect to MySQL server on '130.211.118.121' (4) in /hermes/server/inc/db.php on line 28
+[14-Jul-2019 18:31:37 America/Los_Angeles] PHP Warning:  Use of undefined constant REQUEST_URI - assumed 'REQUEST_URI' (this will throw an Error in a future version of PHP) in /hermes/server/inc/hsglobal.php on line 10
+[14-Jul-2019 18:31:37 America/Los_Angeles] PHP Warning:  Use of undefined constant REQUEST_URI - assumed 'REQUEST_URI' (this will throw an Error in a future version of PHP) in /hermes/server/inc/hsglobal.php on line 11
+[14-Jul-2019 18:31:37 America/Los_Angeles] PHP Warning:  Use of undefined constant REQUEST_URI - assumed 'REQUEST_URI' (this will throw an Error in a future version of PHP) in /hermes/server/inc/hsglobal.php on line 12
+[14-Jul-2019 18:32:02 America/Los_Angeles] PHP Warning:  mysqli::real_connect(): (HY000/2003): Can't connect to MySQL server on '130.211.118.121' (4) in /hermes/server/inc/db.php on line 26
+[14-Jul-2019 18:32:02 America/Los_Angeles] PHP Notice:  Connect Error (2003) Can't connect to MySQL server on '130.211.118.121' (4) in /hermes/server/inc/db.php on line 28
+[14-Jul-2019 18:32:12 America/Los_Angeles] PHP Warning:  Use of undefined constant REQUEST_URI - assumed 'REQUEST_URI' (this will throw an Error in a future version of PHP) in /hermes/server/inc/hsglobal.php on line 10
+[14-Jul-2019 18:32:12 America/Los_Angeles] PHP Warning:  Use of undefined constant REQUEST_URI - assumed 'REQUEST_URI' (this will throw an Error in a future version of PHP) in /hermes/server/inc/hsglobal.php on line 11
+[14-Jul-2019 18:32:12 America/Los_Angeles] PHP Warning:  Use of undefined constant REQUEST_URI - assumed 'REQUEST_URI' (this will throw an Error in a future version of PHP) in /hermes/server/inc/hsglobal.php on line 12
+[14-Jul-2019 18:32:12 America/Los_Angeles] PHP Recoverable fatal error:  Object of class stdClass could not be converted to string in /hermes/server/inc/debug.php on line 5
+[14-Jul-2019 18:32:58 America/Los_Angeles] PHP Warning:  Use of undefined constant REQUEST_URI - assumed 'REQUEST_URI' (this will throw an Error in a future version of PHP) in /hermes/server/inc/hsglobal.php on line 10
+[14-Jul-2019 18:32:58 America/Los_Angeles] PHP Warning:  Use of undefined constant REQUEST_URI - assumed 'REQUEST_URI' (this will throw an Error in a future version of PHP) in /hermes/server/inc/hsglobal.php on line 11
+[14-Jul-2019 18:32:58 America/Los_Angeles] PHP Warning:  Use of undefined constant REQUEST_URI - assumed 'REQUEST_URI' (this will throw an Error in a future version of PHP) in /hermes/server/inc/hsglobal.php on line 12
+[14-Jul-2019 18:32:58 America/Los_Angeles] PHP Recoverable fatal error:  Object of class stdClass could not be converted to string in /hermes/server/inc/debug.php on line 5
+[14-Jul-2019 18:34:54 America/Los_Angeles] PHP Warning:  Use of undefined constant REQUEST_URI - assumed 'REQUEST_URI' (this will throw an Error in a future version of PHP) in /hermes/server/inc/hsglobal.php on line 10
+[14-Jul-2019 18:34:54 America/Los_Angeles] PHP Warning:  Use of undefined constant REQUEST_URI - assumed 'REQUEST_URI' (this will throw an Error in a future version of PHP) in /hermes/server/inc/hsglobal.php on line 11
+[14-Jul-2019 18:34:54 America/Los_Angeles] PHP Warning:  Use of undefined constant REQUEST_URI - assumed 'REQUEST_URI' (this will throw an Error in a future version of PHP) in /hermes/server/inc/hsglobal.php on line 12
+[14-Jul-2019 18:35:17 America/Los_Angeles] PHP Warning:  mysqli::real_connect(): (HY000/2003): Can't connect to MySQL server on '130.211.118.121' (4) in /hermes/server/inc/db.php on line 26
+[14-Jul-2019 18:35:17 America/Los_Angeles] PHP Notice:  Connect Error (2003) Can't connect to MySQL server on '130.211.118.121' (4) in /hermes/server/inc/db.php on line 28
+[14-Jul-2019 18:36:26 America/Los_Angeles] PHP Warning:  mysqli::real_connect(): (HY000/2003): Can't connect to MySQL server on '130.211.118.121' (4) in /hermes/server/inc/db.php on line 26
+[14-Jul-2019 18:36:26 America/Los_Angeles] PHP Notice:  Connect Error (2003) Can't connect to MySQL server on '130.211.118.121' (4) in /hermes/server/inc/db.php on line 28
+[14-Jul-2019 18:36:57 America/Los_Angeles] PHP Warning:  mysqli::real_connect(): (HY000/2003): Can't connect to MySQL server on '130.211.118.121' (4) in /hermes/server/inc/db.php on line 26
+[14-Jul-2019 18:36:57 America/Los_Angeles] PHP Notice:  Connect Error (2003) Can't connect to MySQL server on '130.211.118.121' (4) in /hermes/server/inc/db.php on line 28
+[14-Jul-2019 18:37:33 America/Los_Angeles] PHP Warning:  mysqli::real_connect(): (HY000/2003): Can't connect to MySQL server on '130.211.118.121' (4) in /hermes/server/inc/db.php on line 26
+[14-Jul-2019 18:37:33 America/Los_Angeles] PHP Notice:  Connect Error (2003) Can't connect to MySQL server on '130.211.118.121' (4) in /hermes/server/inc/db.php on line 28
+[14-Jul-2019 18:38:13 America/Los_Angeles] PHP Warning:  mysqli::real_connect(): (HY000/2003): Can't connect to MySQL server on '130.211.118.121' (4) in /hermes/server/inc/db.php on line 26
+[14-Jul-2019 18:38:13 America/Los_Angeles] PHP Notice:  Connect Error (2003) Can't connect to MySQL server on '130.211.118.121' (4) in /hermes/server/inc/db.php on line 28
+[14-Jul-2019 18:51:08 America/Los_Angeles] PHP Warning:  mysqli::real_connect(): (HY000/2003): Can't connect to MySQL server on '130.211.118.121' (4) in /hermes/server/inc/db.php on line 26
+[14-Jul-2019 18:51:08 America/Los_Angeles] PHP Notice:  Connect Error (2003) Can't connect to MySQL server on '130.211.118.121' (4) in /hermes/server/inc/db.php on line 28
+[14-Jul-2019 18:51:21 America/Los_Angeles] PHP Recoverable fatal error:  Object of class stdClass could not be converted to string in /hermes/server/inc/debug.php on line 5
+[14-Jul-2019 18:51:58 America/Los_Angeles] PHP Recoverable fatal error:  Object of class stdClass could not be converted to string in /hermes/server/inc/debug.php on line 5
+[14-Jul-2019 18:52:41 America/Los_Angeles] PHP Recoverable fatal error:  Object of class stdClass could not be converted to string in /hermes/server/inc/debug.php on line 5
+[14-Jul-2019 18:52:45 America/Los_Angeles] PHP Recoverable fatal error:  Object of class stdClass could not be converted to string in /hermes/server/inc/debug.php on line 5
+[14-Jul-2019 18:53:36 America/Los_Angeles] PHP Recoverable fatal error:  Object of class stdClass could not be converted to string in /hermes/server/inc/debug.php on line 5
+[14-Jul-2019 18:55:58 America/Los_Angeles] PHP Warning:  Invalid argument supplied for foreach() in /hermes/server/inc/debug.php on line 4
+[14-Jul-2019 18:59:07 America/Los_Angeles] PHP Warning:  mysqli::real_connect(): (HY000/2003): Can't connect to MySQL server on '130.211.118.121' (4) in /hermes/server/inc/db.php on line 26
+[14-Jul-2019 18:59:07 America/Los_Angeles] PHP Notice:  Connect Error (2003) Can't connect to MySQL server on '130.211.118.121' (4) in /hermes/server/inc/db.php on line 28

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-namespace server\DataModel;
+namespace Hermes\DataModel;
 
 /**
  * The common model implemented by Google Datastore, mysql, etc.
