@@ -20,7 +20,7 @@ namespace Hermes\DataModel;
  * Class Sql implements the DataModelInterface with a mysql or postgres database.
  *
  */
-class CustomerSql implements DataModelInterface
+class AddressSql implements ADRModelInterface
 {
 
     private $servername;
@@ -35,13 +35,16 @@ class CustomerSql implements DataModelInterface
 
     /*
      * Creates the SQL books table if it doesn't already exist.
-     *         'Useridentifier' => 'string',
-        'Firebase ID' => 'string',
-        'First Name' => 'string',
-        'Middle Name' => 'string',
-        'Last Name' => 'string',
-        'Email' => 'string',
-        'Phone' => 'string',
+     *  'addressidentifier' => 'string',
+     *  'Useridentifier' => 'string',
+        'Address Number' => 'string',
+        'Address Name' => 'string',
+        'Address Unit' => 'string',
+        'State' => 'string',
+        'Zip' => 'string',
+        'AddressType' => 'integer',
+        'FedEx Verified' => 'bit',
+        'City' => 'string',
         'Active'=> 'bit',
      */
     public function __construct($server,$user,$pwd,$db,$key,$cert,$ca,$debug=false,$commit=false)
@@ -54,17 +57,20 @@ class CustomerSql implements DataModelInterface
         $this->clientcert = $cert;
         $this->serverca = $ca;
         $this->DEBUG = $debug;
-        $this->bindlist = "ssssss";
+        $this->bindlist = "sssssiis";
         $this->commit = $commit;
 
         $this->columnNames = array(
+            'addressidentifier',
             'Useridentifier',
-            'Firebase ID',
-            'First Name',
-            'Middle Name',
-            'Last Name',
-            'Email',
-            'Phone',
+            'Address Number',
+            'Address Name',
+            'Address Unit',
+            'State',
+            'Zip',
+            'Address Type',
+            'FedEx Verified',
+            'City',
             'Active',
         );
 
@@ -112,71 +118,88 @@ class CustomerSql implements DataModelInterface
     }
 
     /**
-     * Throws an exception if $customer contains an invalid key.
+     * Throws an exception if $address contains an invalid key.
      *
-     * @param $customer array
+     * @param $address array
      *
      * @throws \Exception
      */
-    private function verify($customer)
+    private function verify($list)
     {
-        if ($invalid = array_diff_key($customer, array_flip($this->columnNames))) {
+        if ($invalid = array_diff_key($list, array_flip($this->columnNames))) {
             throw new \Exception(sprintf(
-                'unsupported book properties: "%s"',
+                'unsupported ADDRESS properties: "%s"',
                 implode(', ', $invalid)
             ));
         }
     }
 
     /*
-        listCustomers = list customers to a limit.  Uses the CustomerHex view vs Customer Relation.  CustomerHex simply converts the 'Useridentifier' column to Hex format
+        list = list addresses to a limit.  Uses the AddressHex view vs Address Relation.  AddressHex simply converts the 'Useridentifier' and addressidentifier column to Hex format
     */
-    public function list($limit = 10, $cursor = 0, $page = '<', $sort='Last Name', $search=null)
+    public function list($limit = 10, $ID, $cursor = 0, $page = null, $sort='Address Type')
     {
         $dbconn = $this->newConnection();
-        $query = "SELECT * FROM CustomerHex ";
-        $PBlist = "";
-        $PBargs = Array();
-
-        if (!$sort){
-            $sort='Last Name';
-        }
-        
         if($this->DEBUG){
             trigger_error("mySQLI Status: ".$dbconn->server_info." Database: ".$dbconn->host_info." Limit, Cursor: ". $limit . $cursor);
         }
+        if ($cursor) {
+            if (!$page){
+                $page = '<';
+            }
 
-        if($search){
-            // Add Search
-            $PBlist = $PBlist."s";
-            $search = "%$search%";
-            $PBargs[] = $search;
+            if($page == '<'){
+                $query = 'SELECT * FROM AddressHex WHERE  Useridentifier = ? AND addressidentifier '. $page .' ?';
+                if($statement = $dbconn->prepare($query)){
+                    /* bind parameters for markers */
+                    $statement->bind_param("si",$ID, $cursor);
+                }else{
+                    if($this->DEBUG){
+                        trigger_error("mySQLI Error: ".$dbconn->error." Error Number: ".$dbconn->errno);
+                    }
+                    die("mySQLI Error: ".$dbconn->error." Error Number: ".$dbconn->errno);
+                }
+            }else{
+                $query = 'SELECT * FROM AddressHex WHERE Useridentifier = ? AND addressidentifier '. $page .' ?' . ' LIMIT ?';
+                if($statement = $dbconn->prepare($query)){
+                    /* bind parameters for markers */
+                    $limitT = $limit+1;
+
+                    if($this->DEBUG){
+                        trigger_error("Cursor: ".$cursor." Limit: ".$limitT);
+                    }
+
+                    $statement->bind_param("sii", $ID, $cursor, $limitT);
+                }else{
+                    if($this->DEBUG){
+                        trigger_error("mySQLI Error: ".$dbconn->error." Error Number: ".$dbconn->errno);
+                        trigger_error("Cursor: ".$cursor." Limit: ".$limitT);
+                    }
+                    die("mySQLI Error: ".$dbconn->error." Error Number: ".$dbconn->errno);
+                }
+            }
 
             if($this->DEBUG){
-                trigger_error("Search With wildcard: $search");
+                trigger_error("Query: ".$query);
             }
-            $query = $query."WHERE `Last Name` LIKE ? ";
-        }
 
-        $query = $query."ORDER BY `$sort` ASC";
-        
-        if($statement = $dbconn->prepare($query)){
-            if($this->DEBUG){
-                trigger_error("Query: ".$query." Bind List Count: ".count($PBargs));
+
+        } else {
+            $query = 'SELECT * FROM AddressHex WHERE Useridentifier = ? ORDER BY addressidentifier LIMIT ?';
+            if($statement = $dbconn->prepare($query)){
+                $limitT = $limit+1;
+                $statement->bind_param("si",$ID, $limitT);
+            }else{
+                trigger_error("mySQLI Error: ".$dbconn->error." Error Number: ".$dbconn->errno);
+                die("mySQLI Error: ".$dbconn->error." Error Number: ".$dbconn->errno);
             }
-            $statement->bind_param($PBlist,...$PBargs);
-        }else{
-            trigger_error("mySQLI Error: ".$dbconn->error." Error Number: ".$dbconn->errno);
-            die("mySQLI Error: ".$dbconn->error." Error Number: ".$dbconn->errno);
-        }
-
-        if($this->DEBUG){
-            trigger_error("Query: ".$query);
         }
 
         $statement->execute();
         $rows = array();
         $rowHeaders = array();
+        $last_row = null;
+        $new_cursor = $cursor;
 
         if($this->DEBUG){
             trigger_error("mySQLI Status: ".$dbconn->server_info." Database: ".$dbconn->host_info." Limit, Cursor: ". $limit . $cursor);
@@ -192,84 +215,82 @@ class CustomerSql implements DataModelInterface
         //Get the Tuples
         $statement->execute();
         $resultSet = $statement->get_result();
-        $startrow = $cursor;
-        $rowCount = $resultSet->num_rows;
-        if($this->DEBUG){
-            trigger_error("Startrow: $startrow Cursor: $cursor Rows: $rowCount");
+        $rowStart = $resultSet->num_rows - $limit;
+        if ($page == "<"){
+            $resultSet->data_seek($rowStart);
         }
-        if ($cursor<0){
-                $startrow = 0;
-                $cursor = 0;
-        }
-        $resultSet->data_seek($startrow);
         $x = 0;
         $row = $resultSet->fetch_array(MYSQLI_ASSOC);
-        while ($row && ($x < $limit)) {
+        while ($row && ($x <= $limit)) {
             
-            trigger_error("First Name: ".$row['First Name']);
-            $rows[]= $row;
+            if (count($rows) == $limit) {
+                $new_cursor = $last_row['addressidentifier'];
+            }else{
+                trigger_error("Address Street: ".$row['Address Name']);
+                $rows[]= $row;
+                $last_row = $row;
+                $new_cursor = $last_row['addressidentifier'];
+            }
             $row = $resultSet->fetch_array(MYSQLI_ASSOC);
             $x++;
-            $cursor++;
+
         }
 
         $dbconn->close();
 
         if($this->DEBUG){
-            trigger_error("Last Name: ". $rows[0]['Last Name']);
+            trigger_error("Address Street: ".$rows[0]['Address Name']);
         }
 
         $retArray = array(
-            'customerColumns' => $rowHeaders,
-            'customers' => $rows,
-            'cursor' => $cursor,
+            'addressColumns' => $rowHeaders,
+            'addresses' => $rows,
+            'cursor' => $new_cursor,
         );
 
         return $retArray;
 
+
     }
 
-    public function create($customer, $id = null)
+    public function create($address, $id = null)
     {
-        $this->verify($customer);
+        $this->verify($address);
         if ($id) {
-            $customer['Useridentifier'] = $id;
+            $address['addressidentifier'] = $id;
         }
         $dbconn = $this->newConnection();
-        $names = array_keys($customer);
+        $names = array_keys($address);
+        array_shift($names);
         $placeHolders = array_map(function () {
             return "?";
         }, $names);
         $sql = sprintf(
-            'INSERT INTO Customer (`%s`) VALUES (%s)',
+            "INSERT INTO Address (`Useridentifier`, `%s`) VALUES (UNHEX('".$address['Useridentifier']."'), %s)",
             implode('`, `', $names),
             implode(', ', $placeHolders)
         );
 
         trigger_error("SQL: ". $sql);
         if($statement = $dbconn->prepare($sql) ){
-                    //Firebase ID, First Name, Middle Name, Last Name, Email, Phone
-            if($statement->bind_param($this->bindlist, $customer['Firebase ID'],$customer['First Name'],$customer['Middle Name'], $customer['Last Name'], $customer['Email'], $customer['Phone'])){
 
-                if($statement->execute()){
+            if($statement->bind_param($this->bindlist, $address['Address Number'],$address['Address Name'], $address['Address Unit'], $address['State'], $address['Zip'], $address['Address Type'],$address['FedEx Verified'], $address['City'])){
+
+                if($insertID=$statement->execute()){
+                    trigger_error("Committing set to: ". $this->commit);
                     if($this->commit){
                         if($dbconn->commit()){
                             trigger_error("I'm Committing: ". $this->commit);
-                            $insertID = "Customer Record Created and Commited: ".$customer['First Name']." ".$customer['Last Name']." , ".$customer['Firebase ID'];
-                            $dbconn->close();
                             return $insertID;
                         } else{
                             $insertID = "ERROR: ".$dbconn->error;
                             $dbconn->close();
                             return $insertID;
                         }
-                    } else {
-                        trigger_error("I'm not Committing: ". $this->commit);
-                        $insertID = "Customer Record Data Valid/Not Committing: ".$customer['First Name']." ".$customer['Last Name']." , ".$customer['Firebase ID'];
+                        $insertID = $statement->insert_id;
                         $dbconn->close();
-                        return $insertID;
+                        return $insertID; 
                     }
-
                 } else{
                     $insertID = "ERROR: ".$statement->error;
                     $dbconn->close();
@@ -285,35 +306,35 @@ class CustomerSql implements DataModelInterface
             $dbconn->close();
             return $insertID;
         }
-//        $dbconn->close();
-//        return $insertID;
+        $dbconn->close();
+        return $insertID;
 
     }
 
     public function read($id)
     {
         $dbconn = $this->newConnection();
-        $statement = $dbconn->prepare('SELECT * FROM CustomerHex WHERE Useridentifier = ?');
+        $statement = $dbconn->prepare('SELECT * FROM address WHERE Useridentifier = ?');
         $statement->bind_param('s', $id);
         $statement->execute();
-        $resultSet = $statement->get_result();
-        $readCustomer = $resultSet->fetch_array(MYSQLI_ASSOC);
+        $readaddress = $statement->fetch();
         $dbconn->close();
-        return $readCustomer;
+        return $readaddress;
     }
 
-    public function update($customer)
+    public function update($address)
     {
-        $this->verify($customer);
+        $this->verify($address);
         $dbconn = $this->newConnection();
-        $userID = array_shift($customer);
-        $names = array_keys($customer);
+        $addressID = array_shift($address);
+        $userID = array_shift($address);
+        $names = array_keys($address);
         $sql = sprintf(
-            'UPDATE `Customer` SET `%s`',
+            "UPDATE `Address` SET `Useridentifier`= UNHEX('". $userID ."'), `%s`",
             implode('`=?, `', $names)
         );
 
-        $sql = $sql. "=? WHERE `Useridentifier` = UNHEX('$userID')";
+        $sql = $sql. "=? WHERE `addressidentifier` = UNHEX('$addressID')";
         
         $updateID = "";
         if($this->DEBUG){
@@ -321,8 +342,8 @@ class CustomerSql implements DataModelInterface
         }
 
         if($statement = $dbconn->prepare($sql) ){
-            //Firebase ID, First Name, Middle Name, Last Name, Email, Phone
-            if($statement->bind_param($this->bindlist, $customer['Firebase ID'],$customer['First Name'],$customer['Middle Name'], $customer['Last Name'], $customer['Email'], $customer['Phone'])){ 
+//            if($statement->bind_param($this->bindlist, $address['Useridentifier'],$address['Address Number'],$address['Address Name'], $address['Address Unit'], $address['State'], $address['Zip'], $address['Address Type'],$address['FedEx Verified'], $address['City'])){ 
+            if($statement->bind_param($this->bindlist, ...$address)){ 
                 if($statement->execute()){
                     trigger_error("Committing set to: ". $this->commit);
                     if($this->commit){
@@ -363,7 +384,7 @@ class CustomerSql implements DataModelInterface
     public function delete($id)
     {
         $dbconn = $this->newConnection();
-        $sql = "DELETE FROM `Customer` WHERE `Useridentifier` = UNHEX('$id')";
+        $sql = "DELETE FROM `address` WHERE `addressidentifier` = UNHEX('$id')";
         trigger_error("SQL: ". $sql);
         if($statement = $dbconn->prepare($sql)){
             if($statement->execute()){

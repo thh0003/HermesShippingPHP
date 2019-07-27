@@ -48,125 +48,7 @@
 				return BVar
 			}
 
-			function hsCopyCustomer(cust) {
-				for (custData in hsDD.HS_CUSTOMERLIST.customers[cust]){
-					if (custData !='Useridentifier' && custData !='Active'){
-						document.getElementById(custData).value = hsDD.HS_CUSTOMERLIST.customers[cust][custData];
-					}
-				}
-			}
 
-			function hsCreateCustomer(){
-				var xmlhttp_1 = new XMLHttpRequest();
-				var customer = {}
-				var obj_1 = { "HS_ACTION":"CREATE", "HS_OBJECT":"CUSTOMER", "HS_COMMIT": document.getElementById("hsCommit").value, "HS_PAGE":page, "HS_CURSOR":cursor};
-				for(var custCol=0; custCol < hsDD.HS_CUSTOMERLIST.customerColumns.length;custCol++){
-					if (custCol != 0 && custCol != hsDD.HS_CUSTOMERLIST.customerColumns.length-1){
-						console.log("field name: "+hsDD.HS_CUSTOMERLIST.customerColumns[custCol] + " input form value: " + document.getElementById(hsDD.HS_CUSTOMERLIST.customerColumns[custCol]).value);
-						customer[hsDD.HS_CUSTOMERLIST.customerColumns[custCol]] = document.getElementById(hsDD.HS_CUSTOMERLIST.customerColumns[custCol]).value;
-					}
-				}
-				obj_1["HS_CUSTOMER"] = customer;
-				var dbParam_1 = JSON.stringify(obj_1);
-				console.log(dbParam_1);
-				document.getElementById("HS_JSON_SENT1").innerHTML = "JSON SENT1: dbParam: "+ dbParam_1;
-				
-				xmlhttp_1.onreadystatechange = function() {
-					if (this.readyState == 4 && this.status == 200) {
-						hsDD = JSON.parse(this.responseText);
-						if (isHS_DEBUG(hsDD.DEBUG)){
-							console.log("JSON RESPONSE: "+ hsDD);
-						}
-						document.getElementById("hsStatus").innerHTML = "Mutation Status: "+ hsDD.HS_NEWCUSTOMER;
-					}
-					if (isHS_DEBUG(hsDD.DEBUG)){
-							document.getElementById("HS_ERR1").innerHTML = "HS_ERR1: E1: "+hsDD.HS_ERR1;	
-							document.getElementById("HS_JSON_RECEIVED1").innerHTML = "JSON RECEIVED1: "+ this.responseText;	
-					}
-				};
-					
-					
-				xmlhttp_1.open("POST", "https://www.pgesoftware.com/hermes/server/index.php", true);
-				xmlhttp_1.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-				xmlhttp_1.send("x=" + dbParam_1);
-				xmlhttp_1.close;
-
-
-			}
-
-			function hsListCustomers(page){
-				var xmlhttp_1 = new XMLHttpRequest();
-				if (page == "INIT"){
-					cursor = null;
-					page = null;
-				} else if(page == "<"){
-					cursor = hsDD.HS_CUSTOMERLIST.customers[0].Useridentifier;
-				} else {
-					cursor = hsDD.HS_CUSTOMERLIST.customers[hsDD.HS_CUSTOMERLIST.customers.length-1].Useridentifier;
-				}
-				var obj_1 = { "HS_ACTION":"LOAD", "HS_OBJECT":"CUSTOMER", "HS_PAGE":page, "HS_CURSOR":cursor };
-				var dbParam_1 = JSON.stringify(obj_1);
-				console.log(dbParam_1);
-				document.getElementById("HS_JSON_SENT1").innerHTML = "JSON SENT1: dbParam: "+ dbParam_1;
-				
-				xmlhttp_1.onreadystatechange = function() {
-					if (this.readyState == 4 && this.status == 200) {
-						hsDD = JSON.parse(this.responseText);
-						if (isHS_DEBUG(hsDD.DEBUG)){
-							console.log("JSON RESPONSE: "+ hsDD);
-						}
-
-						customerList = "<table class='table table-striped table-hover'><thead><form><tr>";
-						blankinput = "<tr class='table-info'>";
-						
-
-						for(var custCol=0; custCol < hsDD.HS_CUSTOMERLIST.customerColumns.length;custCol++){
-							customerList = customerList + "<th scope='col'>"+ hsDD.HS_CUSTOMERLIST.customerColumns[custCol] +"</th>";
-							if (custCol == 0 || custCol == hsDD.HS_CUSTOMERLIST.customerColumns.length-1){
-								blankinput = blankinput + 	"<td scope='col'></td>";
-							} else {
-								blankinput = blankinput + 	"<td scope='col'><input type='text' class='form-control' placeholder='"+hsDD.HS_CUSTOMERLIST.customerColumns[custCol]+"' id='"+ hsDD.HS_CUSTOMERLIST.customerColumns[custCol] +"'></td>";
-							}
-						}
-						blankinput = blankinput + "<td scope='col'><button class='btn btn-outline-secondary' type='button' id='Create' onclick='hsCreateCustomer()'>Create</button></td></tr>";
-						customerList = customerList +"<th scoope='col'>Actions</th></tr></thead><tbody>";
-						customerList = customerList + blankinput;
-
-						for(var cust=0; cust < hsDD.HS_CUSTOMERLIST.customers.length;cust++){
-							customerList = customerList + "<tr>"
-							for (custData in hsDD.HS_CUSTOMERLIST.customers[cust]){
-								if (custData=='Useridentifier' || custData == "Active") {
-									customerList = customerList + "<td scope='col' id='"+custData+"_"+cust+"'>"+hsDD.HS_CUSTOMERLIST.customers[cust][custData]+"</td>";
-								}else{
-									customerList = customerList + "<td scope='col'><input type='text' class='form-control' id='"+custData+"_"+cust+"' value='"+hsDD.HS_CUSTOMERLIST.customers[cust][custData]+"'></td>";
-								}
-							}
-							customerList = customerList + "<td scope='col'><button class='btn btn-outline-secondary dropdown-toggle' id='action_"+cust+"' type='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>Actions</button>"+
-    													  "<div class='dropdown-menu'>" +
-														  "<a class='dropdown-item' href='javascript:hsUpdateCustomer("+ cust +");'>Update</a>"+
-														  "<a class='dropdown-item' href='javascript:hsDeleteCustomer("+ cust +");'>Delete</a>"+
-														  "<a class='dropdown-item' href='javascript:hsCopyCustomer("+ cust +");'>Copy</a></div></td></tr>";
-						}
-
-
-						customerList = customerList +"</form></tbody></table>";
-						document.getElementById("hs-data-view").innerHTML = customerList;
-
-
-						if (isHS_DEBUG(hsDD.DEBUG)){
-							document.getElementById("HS_ERR1").innerHTML = "HS_ERR1: E1: "+hsDD.HS_ERR1;	
-							document.getElementById("HS_JSON_RECEIVED1").innerHTML = "JSON RECEIVED1: "+ this.responseText;	
-						}
-					}
-				};
-					
-					
-				xmlhttp_1.open("POST", "https://www.pgesoftware.com/hermes/server/index.php", true);
-				xmlhttp_1.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-				xmlhttp_1.send("x=" + dbParam_1);
-				xmlhttp_1.close;
-
-			}
 	</script>
 	</head>
 	<body>
@@ -186,7 +68,7 @@
 				<h4 id="hsStatus">Mutation Status:</h4>
 			</div>
 			<div class="alert alert-danger col" role="alert">
-					<h4>Commit Mutation: <input type="checkbox" id="hsCommit" value="COMMIT" aria-label="Check to commit all mutations"></h4>
+					<h4>Commit Mutation: <input type="checkbox" id="hsCommit" aria-label="Check to commit all mutations"></h4>
 			</div>
 		</div>
 		<ul class="nav nav-tabs nav-fill row" id="hsTab" role="tablist">
@@ -194,10 +76,10 @@
 					<a class="nav-link active" href="#Customers" role="tab" id="customer-tab" data-toggle="tab" aria-controls="Customers" aria-selected="true">Customers</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" href="#systemadmin" role="tab" id="admin-tab" data-toggle="tab" aria-controls="systemadmin" aria-selected="false">System Admins</a>
+					<a class="nav-link" href="#address" role="tab" id="address-tab" data-toggle="tab" aria-controls="address" aria-selected="false">Addresses</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" href="#address" role="tab" id="address-tab" data-toggle="tab" aria-controls="address" aria-selected="false">Addresses</a>
+					<a class="nav-link" href="#systemadmin" role="tab" id="admin-tab" data-toggle="tab" aria-controls="systemadmin" aria-selected="false">System Admins</a>
 				</li>
 		</ul>
 		<div class="tab-content row" id="hsTabContent">
@@ -206,15 +88,28 @@
 						<div class="btn-group btn-group-lg mr-2 " role="group" aria-label="Customer Actions">
 							<h3>
 								Customers
-								<button type="button" onclick="hsListCustomers('INIT')" class="btn btn-primary">List</button>
-								<button type="button col" onclick="hsListCustomers('<')" class="btn btn-primary">Prev</button>
-								<button type="button col"  onclick="hsListCustomers('>')" class="btn btn-primary">Next</button>
+								<button type="button" onclick="hsListCustomers('INIT')" class="btn btn-primary form-control-sm">List</button>
+								<button type="button col" onclick="hsListCustomers('<')" class="btn btn-primary form-control-sm">Prev</button>
+								<button type="button col"  onclick="hsListCustomers('>')" class="btn btn-primary form-control-sm">Next</button>
+								<input type="text col" class="form-control-sm" id="CustSearch" placeholder="Customer Last Name">
+								<button type="button col"  onclick="hsListCustomers('SEARCH')" class="btn btn-primary form-control-sm">Search</button>
 							</h3>
 						</div>
 					</div>		
 					<div class="table-responsive" id="hs-data-view">
 					</div> <!-- /container -->
 				</div>
+				<div class="tab-pane fade show" role="tabpanel" aria-labelledby="address-tab" id="address">
+					<div class="btn-toolbar container-fluid" role="toolbar" aria-label="Address Actions">
+						<div class="btn-group btn-group-lg mr-2 row" id="addressActions" role="group" aria-label="Address Actions">
+						</div>
+					</div>		
+					<div class="table-responsive" id="hs-data-custaddress">
+					</div>					
+					<div class="table-responsive" id="hs-data-address">
+					</div> <!-- /container -->
+				</div>
+
 				<div class="tab-pane fade" role="tabpanel" aria-labelledby="admin-tab" id="systemadmin">
 						<div class="btn-toolbar container-fluid" role="toolbar" aria-label="System Admin Actions">
 							<div class="btn-group btn-group-lg mr-2 row" role="group" aria-label="System Admin Actions">
@@ -227,26 +122,9 @@
 								</h3>
 							</div>
 						</div>		
-						<div class="table-responsive" id="hs-data-view">
+						<div class="table-responsive" id="hs-data-admin">
 						</div> <!-- /container -->
 				</div>
-				<div class="tab-pane fade" role="tabpanel" aria-labelledby="address-tab" id="address">
-						<div class="btn-toolbar" role="toolbar" aria-label="Addresses">
-							<div class="btn-group btn-group-lg mr-2" role="group" aria-label="Addresses">
-								<h3>
-									Address Actions
-								<button type="button" onclick="hsListAddresses()" class="btn btn-primary">List</button>
-								<button type="button" class="btn btn-primary">Create</button>
-								<button type="button" class="btn btn-primary">Update</button>
-								<button type="button" class="btn btn-primary">Delete</button>
-								</h3>
-							</div>
-						</div>		
-						<div class="table-responsive" id="hs-data-view">
-						</div> <!-- /container -->
-				</div>
-			</div>
-
 	</section>
 	<section id="DEBUG" style="visibility:hidden">
 		<div class="row">
@@ -298,7 +176,10 @@
 	</section>
 	<footer class="container">
 		<p>&copy; Company 2017-2019</p>
-	</footer>
+	<script src="inc/js/hs-helper.js"></script>
+	<script src="inc/js/address.js"></script>
+	<script src="inc/js/customer.js"></script>
+	<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script></footer>
 	<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
 	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>

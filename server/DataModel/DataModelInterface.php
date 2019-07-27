@@ -21,7 +21,7 @@ namespace Hermes\DataModel;
 /**
  * The common model implemented by Google Datastore, mysql, etc.
  */
-interface CustomerDataModelInterface
+interface DataModelInterface
 {
     /**
      * Lists all the customers in the data model.
@@ -35,7 +35,7 @@ interface CustomerDataModelInterface
      *               'cursor' => pass to next call to listCustomers() to fetch
      *               more customers]
      */
-    public function listCustomers($limit = 10, $cursor = null);
+    public function list($limit = 10, $cursor = null);
 
     /**
      * Creates a new customer in the data model.
