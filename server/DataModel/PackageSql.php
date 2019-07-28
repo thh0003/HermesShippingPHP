@@ -20,7 +20,7 @@ namespace Hermes\DataModel;
  * Class Sql implements the DataModelInterface with a mysql or postgres database.
  *
  */
-class AddressSql implements ADRModelInterface
+class PackageSql implements PAKModelInterface
 {
 
     private $servername;
@@ -35,17 +35,15 @@ class AddressSql implements ADRModelInterface
 
     /*
      * Creates the SQL books table if it doesn't already exist.
-     *  'addressidentifier' => 'string',
-     *  'Useridentifier' => 'string',
-        'Address Number' => 'string',
-        'Address Name' => 'string',
-        'Address Unit' => 'string',
-        'State' => 'string',
-        'Zip' => 'string',
-        'AddressType' => 'integer',
-        'FedEx Verified' => 'bit',
-        'City' => 'string',
-        'Active'=> 'bit',
+            'Package ID',
+            'FedEx Shipping ID',
+            'Useridentifier',
+            'Tracking ID',
+            'Width',
+            'Length',
+            'Height',
+            'Weight',
+            'Active'
      */
     public function __construct($server,$user,$pwd,$db,$key,$cert,$ca,$debug=false,$commit=false)
     {
@@ -57,21 +55,19 @@ class AddressSql implements ADRModelInterface
         $this->clientcert = $cert;
         $this->serverca = $ca;
         $this->DEBUG = $debug;
-        $this->bindlist = "sssssiis";
+        $this->bindlist = "sisiiid";
         $this->commit = $commit;
 
         $this->columnNames = array(
-            'addressidentifier',
+            'Package_ID',
+            'FedEx Shipping ID',
             'Useridentifier',
-            'Address Number',
-            'Address Name',
-            'Address Unit',
-            'State',
-            'Zip',
-            'Address Type',
-            'FedEx Verified',
-            'City',
-            'Active',
+            'Tracking ID',
+            'Width',
+            'Length',
+            'Height',
+            'Weight',
+            'Active'
         );
 
     }
@@ -128,7 +124,7 @@ class AddressSql implements ADRModelInterface
     {
         if ($invalid = array_diff_key($list, array_flip($this->columnNames))) {
             throw new \Exception(sprintf(
-                'unsupported ADDRESS properties: "%s"',
+                'unsupported USER PACKAGE properties: "%s"',
                 implode(', ', $invalid)
             ));
         }
@@ -137,16 +133,16 @@ class AddressSql implements ADRModelInterface
     /*
         list = list addresses to a limit.  Uses the AddressHex view vs Address Relation.  AddressHex simply converts the 'Useridentifier' and addressidentifier column to Hex format
     */
-    public function list($limit = 10, $ID, $cursor = 0, $page = null, $sort='Address Type', $search=null)
+    public function list($limit = 10, $ID, $cursor = 0, $page = null, $sort='FedEx Shipping ID', $search=null)
     {
         $dbconn = $this->newConnection();
-        $query = "SELECT * FROM `AddressHex` WHERE `Useridentifier` = ? ";
+        $query = "SELECT * FROM `PackageHex` WHERE `Useridentifier` = ? ";
         $PBlist = "s";
         $PBargs = Array();
         $PBargs[] = $ID;
 
         if (!$sort){
-            $sort='Address Type';
+            $sort='FedEx Shipping ID';
         }
         
         if($this->DEBUG){
@@ -162,7 +158,7 @@ class AddressSql implements ADRModelInterface
             if($this->DEBUG){
                 trigger_error("Search With wildcard: $search");
             }
-            $query = $query."AND `Address Type` LIKE ? ";
+            $query = $query."AND `FedEx Shipping ID` LIKE ? ";
         }
 
         $query = $query."ORDER BY `$sort` ASC";
@@ -213,7 +209,7 @@ class AddressSql implements ADRModelInterface
         $row = $resultSet->fetch_array(MYSQLI_ASSOC);
         while ($row && ($x < $limit)) {
             
-            trigger_error("Address Name: ".$row['Address Name']);
+            trigger_error("FedEx Shipping ID: ".$row['FedEx Shipping ID']);
             $rows[]= $row;
             $row = $resultSet->fetch_array(MYSQLI_ASSOC);
             $x++;
@@ -223,40 +219,36 @@ class AddressSql implements ADRModelInterface
         $dbconn->close();
 
         if($this->DEBUG){
-            trigger_error("Address Name: ". $rows[0]['Address Name']);
+            trigger_error("FedEx Shipping ID: ". $rows[0]['FedEx Shipping ID']);
         }
 
         $retArray = array(
-            'addressColumns' => $rowHeaders,
-            'addresses' => $rows,
+            'hspackageColumns' => $rowHeaders,
+            'hspackages' => $rows,
             'cursor' => $cursor,
         );
 
         return $retArray;
     }
 
-    public function create($address, $id = null)
+    public function create($package, $id = null)
     {
-        $this->verify($address);
+        $this->verify($package);
         if ($id) {
-            $address['addressidentifier'] = $id;
+            $address['Package_ID'] = $id;
         }
         $dbconn = $this->newConnection();
-        $names = array_keys($address);
-        array_shift($names);
-        $placeHolders = array_map(function () {
-            return "?";
-        }, $names);
+        $names = array_keys($package);
+        $packageValues = array_values($package);
         $sql = sprintf(
-            "INSERT INTO Address (`Useridentifier`, `%s`) VALUES (UNHEX('".$address['Useridentifier']."'), %s)",
-            implode('`, `', $names),
-            implode(', ', $placeHolders)
-        );
+            "INSERT INTO `User Package` (`%s`)",
+            implode('`, `', $names));
+      
+        $sql = $sql." VALUES ('".$package['FedEx Shipping ID']."', UNHEX('".$package['Useridentifier']."'),'".$package['Tracking ID']."',".$package['Width'].", ".$package['Length'].", ".$package['Height'].", ".$package['Weight'].")" ;
 
         trigger_error("SQL: ". $sql);
+        trigger_error("Insert Values: ". implode(', ', $packageValues));
         if($statement = $dbconn->prepare($sql) ){
-
-            if($statement->bind_param($this->bindlist, $address['Address Number'],$address['Address Name'], $address['Address Unit'], $address['State'], $address['Zip'], $address['Address Type'],$address['FedEx Verified'], $address['City'])){
 
                 if($insertID=$statement->execute()){
                     trigger_error("Committing set to: ". $this->commit);
@@ -278,11 +270,6 @@ class AddressSql implements ADRModelInterface
                     $dbconn->close();
                     return $insertID;                    
                 }
-            } else{
-                $insertID = "ERROR: ".$statement->error;
-                $dbconn->close();
-                return $insertID;
-            }
         } else{
             $insertID = "ERROR: ".$dbconn->error;
             $dbconn->close();
@@ -296,7 +283,7 @@ class AddressSql implements ADRModelInterface
     public function read($id)
     {
         $dbconn = $this->newConnection();
-        $statement = $dbconn->prepare('SELECT * FROM address WHERE Useridentifier = ?');
+        $statement = $dbconn->prepare('SELECT * FROM `PackageHex` WHERE Useridentifier = ?');
         $statement->bind_param('s', $id);
         $statement->execute();
         $readaddress = $statement->fetch();
@@ -304,24 +291,21 @@ class AddressSql implements ADRModelInterface
         return $readaddress;
     }
 
-    public function update($address)
+    public function update($package)
     {
-        $this->verify($address);
+        $this->verify($package);
         $dbconn = $this->newConnection();
-        $addressID = array_shift($address);
-        $userID = array_shift($address);
-        if($this->DEBUG){
-            trigger_error("addressID: $addressID, userID: $userID");
-        }
-
-        $names = array_keys($address);
-        $addressValues = array_values($address);
+        $packageID = "UNHEX('".array_shift($package)."')";
+        $fedexID = array_shift($package);
+        $userID = "UNHEX('".array_shift($package)."')";
+        $names = array_keys($package);
+        $packageValues = array_values($package);
         $sql = sprintf(
-            "UPDATE `Address` SET `Useridentifier`= UNHEX('". $userID ."'), `%s`",
+            "UPDATE `User Package` SET `FedEx Shipping ID`='$fedexID', `Useridentifier`=$userID, `%s`",
             implode('`=?, `', $names)
         );
 
-        $sql = $sql. "=? WHERE `addressidentifier` = UNHEX('$addressID')";
+        $sql = $sql. "=? WHERE `Package_ID` = $packageID";
         
         $updateID = "";
         if($this->DEBUG){
@@ -330,7 +314,7 @@ class AddressSql implements ADRModelInterface
 
         if($statement = $dbconn->prepare($sql) ){
 //            if($statement->bind_param($this->bindlist, $address['Useridentifier'],$address['Address Number'],$address['Address Name'], $address['Address Unit'], $address['State'], $address['Zip'], $address['Address Type'],$address['FedEx Verified'], $address['City'])){ 
-            if($statement->bind_param($this->bindlist, ...$addressValues)){ 
+            if($statement->bind_param("siiid", ...$packageValues)){ 
                 if($statement->execute()){
                     trigger_error("Committing set to: ". $this->commit);
                     if($this->commit){
@@ -371,7 +355,7 @@ class AddressSql implements ADRModelInterface
     public function delete($id)
     {
         $dbconn = $this->newConnection();
-        $sql = "DELETE FROM `Address` WHERE `addressidentifier` = UNHEX('$id')";
+        $sql = "DELETE FROM `User Package` WHERE `Package_ID` = UNHEX('$id')";
         trigger_error("SQL: ". $sql);
         if($statement = $dbconn->prepare($sql)){
             if($statement->execute()){

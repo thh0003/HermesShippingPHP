@@ -6,6 +6,59 @@ function hsCopyCustomer(cust) {
     }
 }
 
+function hsShipmentsCustomer(cust){
+    var custID = document.getElementById("Useridentifier_"+cust).innerHTML
+    var page = "INIT";
+    $('.nav-tabs a[href="#shipment"]').tab('show')
+    hsLookupCustomer(custID).then( function(data){
+        hsPAYCUSTHTML = "<table class='table table-striped table-hover'><thead><form><tr>";
+        hsPAYCUSTHTML = hsPAYCUSTHTML + "<td scope='col' class='d-none' id='PAY_Useridentifier_"+cust+"'>"+data.HS_LOOKUP_CUST["Useridentifier"]+"</td>"+
+                                        "<td scope='col' class='border border-primary' id='PAY_First Name_"+cust+"'><h4 class='danger'>Customer: "+data.HS_LOOKUP_CUST["First Name"]+" "+data.HS_LOOKUP_CUST["Last Name"]+"</h4></td>"+
+                                        "</form></tbody></table>";
+
+
+        document.getElementById("hs-data-custship").innerHTML = hsPAYCUSTHTML;
+    });
+
+    hsListShipment(custID, page, null, "");
+}
+
+function hsPaymentCustomer(cust){
+    var custID = document.getElementById("Useridentifier_"+cust).innerHTML
+    var page = "INIT";
+    $('.nav-tabs a[href="#payment"]').tab('show')
+    hsLookupCustomer(custID).then( function(data){
+        hsPAYCUSTHTML = "<table class='table table-striped table-hover'><thead><form><tr>";
+        hsPAYCUSTHTML = hsPAYCUSTHTML + "<td scope='col' class='d-none' id='PAY_Useridentifier_"+cust+"'>"+data.HS_LOOKUP_CUST["Useridentifier"]+"</td>"+
+                                        "<td scope='col' class='border border-primary' id='PAY_First Name_"+cust+"'><h4 class='danger'>Customer: "+data.HS_LOOKUP_CUST["First Name"]+" "+data.HS_LOOKUP_CUST["Last Name"]+"</h4></td>"+
+                                        "</form></tbody></table>";
+
+
+        document.getElementById("hs-data-custpay").innerHTML = hsPAYCUSTHTML;
+    });
+
+    hsListPayment(custID, page, null, "");
+}
+
+function hsPackagesCustomer(cust){
+    var custID = document.getElementById("Useridentifier_"+cust).innerHTML
+    var page = "INIT";
+    $('.nav-tabs a[href="#package"]').tab('show')
+    hsLookupCustomer(custID).then( function(data){
+        hsPAKCUSTHTML = "<table class='table table-striped table-hover'><thead><form><tr>";
+        hsPAKCUSTHTML = hsPAKCUSTHTML + "<td scope='col' class='d-none' id='PAK_Useridentifier_"+cust+"'>"+data.HS_LOOKUP_CUST["Useridentifier"]+"</td>"+
+                                        "<td scope='col' class='border border-primary' id='PAK_First Name_"+cust+"'><h4 class='danger'>Customer: "+data.HS_LOOKUP_CUST["First Name"]+" "+data.HS_LOOKUP_CUST["Last Name"]+"</h4></td>"+
+                                        "</form></tbody></table>";
+
+
+        document.getElementById("hs-data-custpak").innerHTML = hsPAKCUSTHTML;
+    });
+
+    hsListPackage(custID, page, null, "");
+}
+
+
+
 function hsAddressesCustomer(cust){
     var xmlhttp_1 = new XMLHttpRequest();
     var hsADRCUST = {};

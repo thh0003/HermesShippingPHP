@@ -20,7 +20,7 @@ namespace Hermes\DataModel;
  * Class Sql implements the DataModelInterface with a mysql or postgres database.
  *
  */
-class AddressSql implements ADRModelInterface
+class ShipmentSql implements PAYModelInterface
 {
 
     private $servername;
@@ -32,21 +32,6 @@ class AddressSql implements ADRModelInterface
     private $serverca;
     private $commit;
 
-
-    /*
-     * Creates the SQL books table if it doesn't already exist.
-     *  'addressidentifier' => 'string',
-     *  'Useridentifier' => 'string',
-        'Address Number' => 'string',
-        'Address Name' => 'string',
-        'Address Unit' => 'string',
-        'State' => 'string',
-        'Zip' => 'string',
-        'AddressType' => 'integer',
-        'FedEx Verified' => 'bit',
-        'City' => 'string',
-        'Active'=> 'bit',
-     */
     public function __construct($server,$user,$pwd,$db,$key,$cert,$ca,$debug=false,$commit=false)
     {
         $this->servername = $server;
@@ -57,21 +42,26 @@ class AddressSql implements ADRModelInterface
         $this->clientcert = $cert;
         $this->serverca = $ca;
         $this->DEBUG = $debug;
-        $this->bindlist = "sssssiis";
+        $this->bindlist = "sssssisss";
         $this->commit = $commit;
 
         $this->columnNames = array(
-            'addressidentifier',
-            'Useridentifier',
-            'Address Number',
-            'Address Name',
-            'Address Unit',
-            'State',
-            'Zip',
-            'Address Type',
-            'FedEx Verified',
-            'City',
-            'Active',
+            'FedEx Shipping ID', //CHAR
+            'Useridentifier', //Binary UUID
+            'Shipmentidentifier', //Binary UUID
+            'To_Addressidentifier', //Binary UUID
+            'From_Addressidentifier', //Binary UUID
+            'Master Tracking ID', //INT
+            'Shipping Status', //Varchar
+            'Actual Shipping Cost', //Double
+            'Estimated Shipping Rate', //Double
+            'FedEx Shipping Type', //Varchar
+            'Creation Date', //String
+            'Shipped Date', //String
+            'Delivered Date', //String
+            'Estimated Delivery Date', //String
+            'FedEx Location ID', //Int
+            'FedEx Shipping Type' //Varchar
         );
 
     }
@@ -128,7 +118,7 @@ class AddressSql implements ADRModelInterface
     {
         if ($invalid = array_diff_key($list, array_flip($this->columnNames))) {
             throw new \Exception(sprintf(
-                'unsupported ADDRESS properties: "%s"',
+                'unsupported Shipment properties: "%s"',
                 implode(', ', $invalid)
             ));
         }
@@ -137,72 +127,56 @@ class AddressSql implements ADRModelInterface
     /*
         list = list addresses to a limit.  Uses the AddressHex view vs Address Relation.  AddressHex simply converts the 'Useridentifier' and addressidentifier column to Hex format
     */
-    public function list($limit = 10, $ID, $cursor = 0, $page = null, $sort='Address Type')
+    public function list($limit = 10, $ID, $cursor = 0, $page = null, $sort='To State', $search=null)
     {
         $dbconn = $this->newConnection();
+        $query = "SELECT * FROM `ShipmentHex` WHERE `Useridentifier` = ? ";
+        $PBlist = "s";
+        $PBargs = Array();
+        $PBargs[] = $ID;
+
+        if (!$sort){
+            $sort='To State';
+        }
+        
         if($this->DEBUG){
             trigger_error("mySQLI Status: ".$dbconn->server_info." Database: ".$dbconn->host_info." Limit, Cursor: ". $limit . $cursor);
         }
-        if ($cursor) {
-            if (!$page){
-                $page = '<';
-            }
 
-            if($page == '<'){
-                $query = 'SELECT * FROM AddressHex WHERE  Useridentifier = ? AND addressidentifier '. $page .' ?';
-                if($statement = $dbconn->prepare($query)){
-                    /* bind parameters for markers */
-                    $statement->bind_param("si",$ID, $cursor);
-                }else{
-                    if($this->DEBUG){
-                        trigger_error("mySQLI Error: ".$dbconn->error." Error Number: ".$dbconn->errno);
-                    }
-                    die("mySQLI Error: ".$dbconn->error." Error Number: ".$dbconn->errno);
-                }
-            }else{
-                $query = 'SELECT * FROM AddressHex WHERE Useridentifier = ? AND addressidentifier '. $page .' ?' . ' LIMIT ?';
-                if($statement = $dbconn->prepare($query)){
-                    /* bind parameters for markers */
-                    $limitT = $limit+1;
-
-                    if($this->DEBUG){
-                        trigger_error("Cursor: ".$cursor." Limit: ".$limitT);
-                    }
-
-                    $statement->bind_param("sii", $ID, $cursor, $limitT);
-                }else{
-                    if($this->DEBUG){
-                        trigger_error("mySQLI Error: ".$dbconn->error." Error Number: ".$dbconn->errno);
-                        trigger_error("Cursor: ".$cursor." Limit: ".$limitT);
-                    }
-                    die("mySQLI Error: ".$dbconn->error." Error Number: ".$dbconn->errno);
-                }
-            }
+        if($search){
+            // Add Search
+            $PBlist = $PBlist."s";
+            $search = "%$search%";
+            $PBargs[] = $search;
 
             if($this->DEBUG){
-                trigger_error("Query: ".$query);
+                trigger_error("Search With wildcard: $search");
             }
+            $query = $query."AND `To State` LIKE ? ";
+        }
 
-
-        } else {
-            $query = 'SELECT * FROM AddressHex WHERE Useridentifier = ? ORDER BY addressidentifier LIMIT ?';
-            if($statement = $dbconn->prepare($query)){
-                $limitT = $limit+1;
-                $statement->bind_param("si",$ID, $limitT);
-            }else{
-                trigger_error("mySQLI Error: ".$dbconn->error." Error Number: ".$dbconn->errno);
-                die("mySQLI Error: ".$dbconn->error." Error Number: ".$dbconn->errno);
+        $query = $query."ORDER BY `$sort` ASC";
+        
+        if($statement = $dbconn->prepare($query)){
+            if($this->DEBUG){
+                trigger_error("Query: ".$query." Bind List Count: ".count($PBargs));
             }
+            $statement->bind_param($PBlist,...$PBargs);
+        }else{
+            trigger_error("mySQLI Error: ".$dbconn->error." Error Number: ".$dbconn->errno);
+            die("mySQLI Error: ".$dbconn->error." Error Number: ".$dbconn->errno);
+        }
+
+        if($this->DEBUG){
+            trigger_error("Query: ".$query);
         }
 
         $statement->execute();
         $rows = array();
         $rowHeaders = array();
-        $last_row = null;
-        $new_cursor = $cursor;
 
         if($this->DEBUG){
-            trigger_error("mySQLI Status: ".$dbconn->server_info." Database: ".$dbconn->host_info." Limit, Cursor: ". $limit . $cursor);
+            trigger_error("mySQLI Status: ".$dbconn->server_info." Database: ".$dbconn->host_info." Limit, Cursor: $limit, $cursor");
         }
 
         //Get the Domains
@@ -215,67 +189,67 @@ class AddressSql implements ADRModelInterface
         //Get the Tuples
         $statement->execute();
         $resultSet = $statement->get_result();
-        $rowStart = $resultSet->num_rows - $limit;
-        if ($page == "<"){
-            $resultSet->data_seek($rowStart);
+        $startrow = $cursor;
+        $rowCount = $resultSet->num_rows;
+        if($this->DEBUG){
+            trigger_error("Startrow: $startrow Cursor: $cursor Rows: $rowCount");
         }
+        if ($cursor<0){
+                $startrow = 0;
+                $cursor = 0;
+        }
+        $resultSet->data_seek($startrow);
         $x = 0;
         $row = $resultSet->fetch_array(MYSQLI_ASSOC);
-        while ($row && ($x <= $limit)) {
+        while ($row && ($x < $limit)) {
             
-            if (count($rows) == $limit) {
-                $new_cursor = $last_row['addressidentifier'];
-            }else{
-                trigger_error("Address Street: ".$row['Address Name']);
-                $rows[]= $row;
-                $last_row = $row;
-                $new_cursor = $last_row['addressidentifier'];
-            }
+            trigger_error("FedEx Shipping ID: ".$row['FedEx Shipping ID']);
+            $rows[]= $row;
             $row = $resultSet->fetch_array(MYSQLI_ASSOC);
             $x++;
-
+            $cursor++;
         }
 
         $dbconn->close();
 
         if($this->DEBUG){
-            trigger_error("Address Street: ".$rows[0]['Address Name']);
+            trigger_error("FedEx Shipping ID: ". $rows[0]['FedEx Shipping ID']);
         }
 
         $retArray = array(
-            'addressColumns' => $rowHeaders,
-            'addresses' => $rows,
-            'cursor' => $new_cursor,
+            'hsshipmentColumns' => $rowHeaders,
+            'hsshipments' => $rows,
+            'cursor' => $cursor,
         );
 
         return $retArray;
-
-
     }
 
-    public function create($address, $id = null)
+    public function create($shipment, $id = null)
     {
-        $this->verify($address);
+        $this->verify($shipment);
         if ($id) {
-            $address['addressidentifier'] = $id;
+            $shipment['FedEx Shipping ID'] = $id;
         }
         $dbconn = $this->newConnection();
-        $names = array_keys($address);
-        array_shift($names);
-        $placeHolders = array_map(function () {
-            return "?";
-        }, $names);
+        $names = array_keys($shipment);
+//        $shipmentID = "UNHEX('".array_shift($shipment)."')";
+        $userID = "UNHEX('".array_shift($shipment)."')";
+        $billAdr = "UNHEX('".array_shift($shipment)."')";
+        $shipmentValues = array_values($shipment);
         $sql = sprintf(
-            "INSERT INTO Address (`Useridentifier`, `%s`) VALUES (UNHEX('".$address['Useridentifier']."'), %s)",
-            implode('`, `', $names),
-            implode(', ', $placeHolders)
-        );
+            "INSERT INTO `Shipment Method` (`%s`)",
+            implode('`, `', $names));
+      
+        $sql = $sql." VALUES ($userID, $billAdr,?,?,?,?,?,?)" ;
 
-        trigger_error("SQL: ". $sql);
+        if($this->DEBUG){
+            trigger_error("SQL: ". $sql);
+            trigger_error("Insert Values: ". implode(', ', $shipmentValues));
+        }
+
         if($statement = $dbconn->prepare($sql) ){
-
-            if($statement->bind_param($this->bindlist, $address['Address Number'],$address['Address Name'], $address['Address Unit'], $address['State'], $address['Zip'], $address['Address Type'],$address['FedEx Verified'], $address['City'])){
-
+            if($statement->bind_param("ssisss", ...$shipmentValues)){
                 if($insertID=$statement->execute()){
                     trigger_error("Committing set to: ". $this->commit);
                     if($this->commit){
@@ -314,7 +288,7 @@ class AddressSql implements ADRModelInterface
     public function read($id)
     {
         $dbconn = $this->newConnection();
-        $statement = $dbconn->prepare('SELECT * FROM address WHERE Useridentifier = ?');
+        $statement = $dbconn->prepare('SELECT * FROM `ShipmentHex` WHERE Useridentifier = ?');
         $statement->bind_param('s', $id);
         $statement->execute();
         $readaddress = $statement->fetch();
@@ -322,19 +296,22 @@ class AddressSql implements ADRModelInterface
         return $readaddress;
     }
 
-    public function update($address)
+    public function update($shipment)
     {
-        $this->verify($address);
+
+        $this->verify($shipment);
         $dbconn = $this->newConnection();
-        $addressID = array_shift($address);
-        $userID = array_shift($address);
-        $names = array_keys($address);
+        $shipmentID = "UNHEX('".array_shift($shipment)."')";
+        $userID = "UNHEX('".array_shift($shipment)."')";
+        $billAdr = "UNHEX('".array_shift($shipment)."')";
+        $names = array_keys($shipment);
+        $shipmentValues = array_values($shipment);
         $sql = sprintf(
-            "UPDATE `Address` SET `Useridentifier`= UNHEX('". $userID ."'), `%s`",
+            "UPDATE `Shipment Method` SET `Useridentifier`=$userID, `Bill To Addressidentifier`=$billAdr, `%s`",
             implode('`=?, `', $names)
         );
 
-        $sql = $sql. "=? WHERE `addressidentifier` = UNHEX('$addressID')";
+        $sql = $sql. "=? WHERE `Shipmentidentifier` = $shipmentID";
         
         $updateID = "";
         if($this->DEBUG){
@@ -343,7 +320,7 @@ class AddressSql implements ADRModelInterface
 
         if($statement = $dbconn->prepare($sql) ){
 //            if($statement->bind_param($this->bindlist, $address['Useridentifier'],$address['Address Number'],$address['Address Name'], $address['Address Unit'], $address['State'], $address['Zip'], $address['Address Type'],$address['FedEx Verified'], $address['City'])){ 
-            if($statement->bind_param($this->bindlist, ...$address)){ 
+            if($statement->bind_param("ssisss", ...$shipmentValues)){ 
                 if($statement->execute()){
                     trigger_error("Committing set to: ". $this->commit);
                     if($this->commit){
@@ -384,7 +361,7 @@ class AddressSql implements ADRModelInterface
     public function delete($id)
     {
         $dbconn = $this->newConnection();
-        $sql = "DELETE FROM `address` WHERE `addressidentifier` = UNHEX('$id')";
+        $sql = "DELETE FROM `Shipment Method` WHERE `Shipmentidentifier` = UNHEX('$id')";
         trigger_error("SQL: ". $sql);
         if($statement = $dbconn->prepare($sql)){
             if($statement->execute()){

@@ -79,7 +79,13 @@
 					<a class="nav-link" href="#address" role="tab" id="address-tab" data-toggle="tab" aria-controls="address" aria-selected="false">Addresses</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" href="#systemadmin" role="tab" id="admin-tab" data-toggle="tab" aria-controls="systemadmin" aria-selected="false">System Admins</a>
+					<a class="nav-link" href="#package" role="tab" id="package-tab" data-toggle="tab" aria-controls="package" aria-selected="false">Packages</a>
+				</li>
+				<li class="nav-item">
+						<a class="nav-link" href="#payment" role="tab" id="payment-tab" data-toggle="tab" aria-controls="payment" aria-selected="false">Payment Methods</a>
+				</li>
+				<li class="nav-item">
+						<a class="nav-link" href="#shipment" role="tab" id="shipment-tab" data-toggle="tab" aria-controls="shipment" aria-selected="false">Shipments</a>
 				</li>
 		</ul>
 		<div class="tab-content row" id="hsTabContent">
@@ -109,22 +115,37 @@
 					<div class="table-responsive" id="hs-data-address">
 					</div> <!-- /container -->
 				</div>
-
-				<div class="tab-pane fade" role="tabpanel" aria-labelledby="admin-tab" id="systemadmin">
-						<div class="btn-toolbar container-fluid" role="toolbar" aria-label="System Admin Actions">
-							<div class="btn-group btn-group-lg mr-2 row" role="group" aria-label="System Admin Actions">
-								<h3>
-									Admin Actions
-								<button type="button col" onclick="hsListAdmins()" class="btn btn-primary">List</button>
-								<button type="button col" class="btn btn-primary">Create</button>
-								<button type="button col" class="btn btn-primary">Update</button>
-								<button type="button col" class="btn btn-primary">Delete</button>
-								</h3>
+				<div class="tab-pane fade show" role="tabpanel" aria-labelledby="package-tab" id="package">
+						<div class="btn-toolbar container-fluid" role="toolbar" aria-label="Package Actions">
+							<div class="btn-group btn-group-lg mr-2 row" id="hspackageActions" role="group" aria-label="Package Actions">
 							</div>
 						</div>		
-						<div class="table-responsive" id="hs-data-admin">
+						<div class="table-responsive" id="hs-data-custpak">
+						</div>					
+						<div class="table-responsive" id="hs-data-package">
 						</div> <!-- /container -->
 				</div>
+				<div class="tab-pane fade show" role="tabpanel" aria-labelledby="payment-tab" id="payment">
+						<div class="btn-toolbar container-fluid" role="toolbar" aria-label="Payment Actions">
+							<div class="btn-group btn-group-lg mr-2 row" id="hspaymentActions" role="group" aria-label="Payment Actions">
+							</div>
+						</div>		
+						<div class="table-responsive" id="hs-data-custpay">
+						</div>					
+						<div class="table-responsive" id="hs-data-payment">
+						</div> <!-- /container -->
+				</div>
+				<div class="tab-pane fade show" role="tabpanel" aria-labelledby="shipment-tab" id="shipment">
+						<div class="btn-toolbar container-fluid" role="toolbar" aria-label="Shipment Actions">
+							<div class="btn-group btn-group-lg mr-2 row" id="hsshipmentActions" role="group" aria-label="Shipment Actions">
+							</div>
+						</div>		
+						<div class="table-responsive" id="hs-data-custship">
+						</div>					
+						<div class="table-responsive" id="hs-data-shipment">
+						</div> <!-- /container -->
+				</div>
+			</div>				
 	</section>
 	<section id="DEBUG" style="visibility:hidden">
 		<div class="row">
@@ -177,8 +198,11 @@
 	<footer class="container">
 		<p>&copy; Company 2017-2019</p>
 	<script src="inc/js/hs-helper.js"></script>
+	<script src="inc/js/payment.js"></script>
+	<script src="inc/js/package.js"></script>
 	<script src="inc/js/address.js"></script>
 	<script src="inc/js/customer.js"></script>
+	<script src="inc/js/shipment.js"></script>
 	<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script></footer>
 	<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>

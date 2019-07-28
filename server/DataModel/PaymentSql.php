@@ -20,7 +20,7 @@ namespace Hermes\DataModel;
  * Class Sql implements the DataModelInterface with a mysql or postgres database.
  *
  */
-class AddressSql implements ADRModelInterface
+class PaymentSql implements PAYModelInterface
 {
 
     private $servername;
@@ -32,21 +32,6 @@ class AddressSql implements ADRModelInterface
     private $serverca;
     private $commit;
 
-
-    /*
-     * Creates the SQL books table if it doesn't already exist.
-     *  'addressidentifier' => 'string',
-     *  'Useridentifier' => 'string',
-        'Address Number' => 'string',
-        'Address Name' => 'string',
-        'Address Unit' => 'string',
-        'State' => 'string',
-        'Zip' => 'string',
-        'AddressType' => 'integer',
-        'FedEx Verified' => 'bit',
-        'City' => 'string',
-        'Active'=> 'bit',
-     */
     public function __construct($server,$user,$pwd,$db,$key,$cert,$ca,$debug=false,$commit=false)
     {
         $this->servername = $server;
@@ -57,21 +42,19 @@ class AddressSql implements ADRModelInterface
         $this->clientcert = $cert;
         $this->serverca = $ca;
         $this->DEBUG = $debug;
-        $this->bindlist = "sssssiis";
+        $this->bindlist = "sssssisss";
         $this->commit = $commit;
 
         $this->columnNames = array(
-            'addressidentifier',
-            'Useridentifier',
-            'Address Number',
-            'Address Name',
-            'Address Unit',
-            'State',
-            'Zip',
-            'Address Type',
-            'FedEx Verified',
-            'City',
-            'Active',
+            'Paymentidentifier', //Binary UUID
+            'Useridentifier', //Binary UUID
+            'Bill To Addressidentifier', //Binary UUID
+            'Account Number', //Varchar
+            'Account Name', //Varchar
+            'Payment Type', //int
+            'Exp Date', //Varchar
+            'CSV Code', //Varchar
+            'Account Routing'   //Varchar         
         );
 
     }
@@ -128,7 +111,7 @@ class AddressSql implements ADRModelInterface
     {
         if ($invalid = array_diff_key($list, array_flip($this->columnNames))) {
             throw new \Exception(sprintf(
-                'unsupported ADDRESS properties: "%s"',
+                'unsupported USER PAYMENT properties: "%s"',
                 implode(', ', $invalid)
             ));
         }
@@ -137,16 +120,16 @@ class AddressSql implements ADRModelInterface
     /*
         list = list addresses to a limit.  Uses the AddressHex view vs Address Relation.  AddressHex simply converts the 'Useridentifier' and addressidentifier column to Hex format
     */
-    public function list($limit = 10, $ID, $cursor = 0, $page = null, $sort='Address Type', $search=null)
+    public function list($limit = 10, $ID, $cursor = 0, $page = null, $sort='Account Name', $search=null)
     {
         $dbconn = $this->newConnection();
-        $query = "SELECT * FROM `AddressHex` WHERE `Useridentifier` = ? ";
+        $query = "SELECT * FROM `PaymentHex` WHERE `Useridentifier` = ? ";
         $PBlist = "s";
         $PBargs = Array();
         $PBargs[] = $ID;
 
         if (!$sort){
-            $sort='Address Type';
+            $sort='Account Name';
         }
         
         if($this->DEBUG){
@@ -162,7 +145,7 @@ class AddressSql implements ADRModelInterface
             if($this->DEBUG){
                 trigger_error("Search With wildcard: $search");
             }
-            $query = $query."AND `Address Type` LIKE ? ";
+            $query = $query."AND `Account Name` LIKE ? ";
         }
 
         $query = $query."ORDER BY `$sort` ASC";
@@ -213,7 +196,7 @@ class AddressSql implements ADRModelInterface
         $row = $resultSet->fetch_array(MYSQLI_ASSOC);
         while ($row && ($x < $limit)) {
             
-            trigger_error("Address Name: ".$row['Address Name']);
+            trigger_error("Account Number: ".$row['Account Number']);
             $rows[]= $row;
             $row = $resultSet->fetch_array(MYSQLI_ASSOC);
             $x++;
@@ -223,41 +206,43 @@ class AddressSql implements ADRModelInterface
         $dbconn->close();
 
         if($this->DEBUG){
-            trigger_error("Address Name: ". $rows[0]['Address Name']);
+            trigger_error("Account Number: ". $rows[0]['Account Number']);
         }
 
         $retArray = array(
-            'addressColumns' => $rowHeaders,
-            'addresses' => $rows,
+            'hspaymentColumns' => $rowHeaders,
+            'hspayments' => $rows,
             'cursor' => $cursor,
         );
 
         return $retArray;
     }
 
-    public function create($address, $id = null)
+    public function create($payment, $id = null)
     {
-        $this->verify($address);
+        $this->verify($payment);
         if ($id) {
-            $address['addressidentifier'] = $id;
+            $payment['Paymentidentifier'] = $id;
         }
         $dbconn = $this->newConnection();
-        $names = array_keys($address);
-        array_shift($names);
-        $placeHolders = array_map(function () {
-            return "?";
-        }, $names);
+        $names = array_keys($payment);
+//        $paymentID = "UNHEX('".array_shift($payment)."')";
+        $userID = "UNHEX('".array_shift($payment)."')";
+        $billAdr = "UNHEX('".array_shift($payment)."')";
+        $paymentValues = array_values($payment);
         $sql = sprintf(
-            "INSERT INTO Address (`Useridentifier`, `%s`) VALUES (UNHEX('".$address['Useridentifier']."'), %s)",
-            implode('`, `', $names),
-            implode(', ', $placeHolders)
-        );
+            "INSERT INTO `Payment Method` (`%s`)",
+            implode('`, `', $names));
+      
+        $sql = $sql." VALUES ($userID, $billAdr,?,?,?,?,?,?)" ;
 
-        trigger_error("SQL: ". $sql);
+        if($this->DEBUG){
+            trigger_error("SQL: ". $sql);
+            trigger_error("Insert Values: ". implode(', ', $paymentValues));
+        }
+
         if($statement = $dbconn->prepare($sql) ){
-
-            if($statement->bind_param($this->bindlist, $address['Address Number'],$address['Address Name'], $address['Address Unit'], $address['State'], $address['Zip'], $address['Address Type'],$address['FedEx Verified'], $address['City'])){
-
+            if($statement->bind_param("ssisss", ...$paymentValues)){
                 if($insertID=$statement->execute()){
                     trigger_error("Committing set to: ". $this->commit);
                     if($this->commit){
@@ -296,7 +281,7 @@ class AddressSql implements ADRModelInterface
     public function read($id)
     {
         $dbconn = $this->newConnection();
-        $statement = $dbconn->prepare('SELECT * FROM address WHERE Useridentifier = ?');
+        $statement = $dbconn->prepare('SELECT * FROM `PaymentHex` WHERE Useridentifier = ?');
         $statement->bind_param('s', $id);
         $statement->execute();
         $readaddress = $statement->fetch();
@@ -304,24 +289,22 @@ class AddressSql implements ADRModelInterface
         return $readaddress;
     }
 
-    public function update($address)
+    public function update($payment)
     {
-        $this->verify($address);
-        $dbconn = $this->newConnection();
-        $addressID = array_shift($address);
-        $userID = array_shift($address);
-        if($this->DEBUG){
-            trigger_error("addressID: $addressID, userID: $userID");
-        }
 
-        $names = array_keys($address);
-        $addressValues = array_values($address);
+        $this->verify($payment);
+        $dbconn = $this->newConnection();
+        $paymentID = "UNHEX('".array_shift($payment)."')";
+        $userID = "UNHEX('".array_shift($payment)."')";
+        $billAdr = "UNHEX('".array_shift($payment)."')";
+        $names = array_keys($payment);
+        $paymentValues = array_values($payment);
         $sql = sprintf(
-            "UPDATE `Address` SET `Useridentifier`= UNHEX('". $userID ."'), `%s`",
+            "UPDATE `Payment Method` SET `Useridentifier`=$userID, `Bill To Addressidentifier`=$billAdr, `%s`",
             implode('`=?, `', $names)
         );
 
-        $sql = $sql. "=? WHERE `addressidentifier` = UNHEX('$addressID')";
+        $sql = $sql. "=? WHERE `Paymentidentifier` = $paymentID";
         
         $updateID = "";
         if($this->DEBUG){
@@ -330,7 +313,7 @@ class AddressSql implements ADRModelInterface
 
         if($statement = $dbconn->prepare($sql) ){
 //            if($statement->bind_param($this->bindlist, $address['Useridentifier'],$address['Address Number'],$address['Address Name'], $address['Address Unit'], $address['State'], $address['Zip'], $address['Address Type'],$address['FedEx Verified'], $address['City'])){ 
-            if($statement->bind_param($this->bindlist, ...$addressValues)){ 
+            if($statement->bind_param("ssisss", ...$paymentValues)){ 
                 if($statement->execute()){
                     trigger_error("Committing set to: ". $this->commit);
                     if($this->commit){
@@ -371,7 +354,7 @@ class AddressSql implements ADRModelInterface
     public function delete($id)
     {
         $dbconn = $this->newConnection();
-        $sql = "DELETE FROM `Address` WHERE `addressidentifier` = UNHEX('$id')";
+        $sql = "DELETE FROM `Payment Method` WHERE `Paymentidentifier` = UNHEX('$id')";
         trigger_error("SQL: ". $sql);
         if($statement = $dbconn->prepare($sql)){
             if($statement->execute()){
